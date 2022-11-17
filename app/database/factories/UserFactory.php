@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -38,5 +39,17 @@ class UserFactory extends Factory
                 'email_verified_at' => null,
             ];
         });
+    }
+
+    /**
+     * for dev and test
+     *
+     * @return self
+     */
+    public function unsafePass() : self
+    {
+        return $this->state([
+            'password' => Hash::make('pass'),
+        ]);
     }
 }
