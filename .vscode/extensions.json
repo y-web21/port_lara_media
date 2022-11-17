@@ -1,5 +1,7 @@
 {
     "recommendations": [
-        "xdebug.php-debug"
+        "xdebug.php-debug",
+        "rexshi.phpdoc-comment-vscode-plugin",
+        "neilbrayfield.php-docblocker"
     ]
 }
