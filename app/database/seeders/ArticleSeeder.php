@@ -2,21 +2,19 @@
 
 namespace Database\Seeders;
 
+use App\Models\Article;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class DatabaseSeeder extends Seeder
+class ArticleSeeder extends Seeder
 {
     /**
-     * Seed the application's database.
+     * Run the database seeds.
      *
      * @return void
      */
     public function run()
     {
-        $this->call([
-            ArticleSeeder::class,
-            UserSeeder::class,
-        ]);
+        Article::factory(10)->create();
     }
 }
