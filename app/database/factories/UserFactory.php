@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -42,14 +43,38 @@ class UserFactory extends Factory
     }
 
     /**
+     * randVerifiedDate
+     *
+     * @param  int $days RAND_MAX value
+     * @return self
+     */
+    public function randVerifiedDate(int $days = 7): self
+    {
+        return $this->state(function () use ($days) {
+            return [
+                'email_verified_at' => Carbon::now()->addMinutes(-(mt_rand(0, 60 * 24 * $days)))
+            ];
+        });
+    }
+
+    /**
+     * @param string $pass password string
+     * @return self
+     */
+    public function setPass(string $pass = ''): self
+    {
+        return $this->state([
+            'password' => Hash::make($pass),
+        ]);
+    }
+
+    /**
      * for dev and test
      *
      * @return self
      */
-    public function unsafePass() : self
+    public function unsafePass(): self
     {
-        return $this->state([
-            'password' => Hash::make('pass'),
-        ]);
+        return $this->setPass('pass');
     }
 }
