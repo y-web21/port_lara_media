@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('title')->default('no title');
             $table->mediumText('content');
             $table->integer('author')->unsigned()->default(0);
+            $table->integer('updated_by')->unsigned()->nullable();
+            $table->integer('status')->unsigned()->default(0);
+            $table->softDeletes();
             $table->timestamps();
         });
     }
