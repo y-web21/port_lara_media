@@ -40,4 +40,14 @@ class Article extends Model
         'deleted_at' => 'datetime',
     ];
 
+    /**
+     * 公開状態にあるレコードに絞り込むローカルスコープ
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopePublish($query)
+    {
+        return $query->where('status', '=', 1)->where('deleted_at', '=', null);
+    }
 }
