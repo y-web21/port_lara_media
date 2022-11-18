@@ -1,6 +1,8 @@
 {
     "recommendations": [
         "xdebug.php-debug",
-        "shufo.vscode-blade-formatter"
+        "shufo.vscode-blade-formatter",
+        "rexshi.phpdoc-comment-vscode-plugin",
+        "neilbrayfield.php-docblocker"
     ]
 }
