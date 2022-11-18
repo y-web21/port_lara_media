@@ -1,0 +1,78 @@
+# PHP CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-php/ for more details
+#
+version: 2
+jobs:
+  test:
+    docker:
+      - image: cimg/php:8.0-node  # primary container Ubuntu 22.04.1 LTS
+        environment:
+          - APP_DEBUG: true
+          - APP_ENV: testing
+          - DB_HOST: 127.0.0.1
+
+      - image: cimg/mysql:8.0
+        environment:
+          - MYSQL_ALLOW_EMPTY_PASSWORD: true
+          - MYSQL_DATABASE: testing
+
+    working_directory: ~/application/
+
+    steps:
+      - checkout
+      - run:
+            name: "node -v npm -v"
+            working_directory: app
+            command: node -v && npm -v
+      - restore_cache:
+          keys:
+            - v1-node-{{ checksum "app/package.json" }}
+            - v1-node-
+      - run:
+          working_directory: app
+          command: npm install
+      - save_cache:
+          key: v1-node-{{ checksum "app/package.json" }}
+          paths:
+            - ./app/node_modules
+
+      # composer Download and cache dependencies
+      - restore_cache:
+          keys:
+            # "composer.lock" can be used if committed to the repo
+            - v1-dependencies-{{ checksum "app/composer.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+      - run:
+          working_directory: app
+          command: composer update && composer install -n --prefer-dist
+      - save_cache:
+          key: v1-dependencies-{{ checksum "app/composer.json" }}
+          paths:
+            - ./app/vendor
+
+      - run:
+      # Our primary container isn't MYSQL so run a sleep command until it's ready.
+          name: MySQL が準備できるまで待機
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z 127.0.0.1 3306 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for MySQL && exit 1
+      - run:
+          name: MySQL CLI のインストール; データベースの作成;
+          command: |
+            sudo apt-get update
+            sudo apt-get install default-mysql-client
+            echo 'CREATE DATABASE IF NOT EXISTS testing;' > ./create_test_database.sql
+            mysql -h 127.0.0.1 -u root < ./create_test_database.sql
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test
