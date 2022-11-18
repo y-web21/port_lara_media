@@ -1,0 +1,57 @@
+version: '3.9'
+
+x-app-name: &app-name
+  ${APP_NAME}
+x-app-root: &app-root
+  /var/www/app/
+x-db-container-name: &db-container-name
+  mysql
+x-environment: &environment
+  APP_NAME: *app-name
+  TZ: Asia/Tokyo
+x-db-environment: &db-environment
+  DB_CONNECTION: mysql
+  DB_HOST: *db-container-name
+  DB_PORT: 3306
+  MYSQL_DATABASE: *app-name
+  MYSQL_USER: user
+
+services:
+  app:
+    container_name: php
+    build:
+      context: ./php/
+      args:
+        LARAVEL_VER: 9.1.*
+        APP_ROOT: *app-root
+    environment:
+      <<: [*environment, *db-environment]
+      APP_ROOT: *app-root
+    env_file:
+      - ./php/app.env
+      - ./mysql/.env
+    working_dir: *app-root
+
+  web:
+    image: nginx:stable
+    container_name: nginx
+    environment: *environment
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    working_dir: /etc/nginx/
+    depends_on:
+      - app
+
+  db:
+    container_name: *db-container-name
+    build:
+        context: ./mysql/
+    environment:
+      <<: [*environment, *db-environment]
+      MYSQL_PS1: '[\U]  \r:\m \P [\d] \n> '
+      HOME: /root
+    env_file:
+      - ./mysql/.env
+    volumes:
+      - ./mysql/log/:/var/log/mysql

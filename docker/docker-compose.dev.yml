@@ -1,0 +1,31 @@
+version: '3.9'
+
+x-app-source: &app-dev-source
+  ../app
+x-app-target: &app-dev-target
+  /var/www/app
+
+services:
+
+  app:
+    build:
+        dockerfile: Dockerfile-dev
+    ports:
+      - "8080:8000"
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - type: bind
+        source: *app-dev-source
+        target: *app-dev-target
+      - type: bind
+        source: ./php/php.ini
+        target: /usr/local/etc/php/php.ini
+
+  web:
+    ports:
+      - "50080:80"
+    volumes:
+      - type: bind
+        source: *app-dev-source
+        target: *app-dev-target
