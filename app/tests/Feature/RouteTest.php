@@ -38,7 +38,7 @@ class RouteTest extends TestCase
     public function getAccessDataProvider(): array
     {
         return [
-            ['home'],
+            ['/'],
             ['/welcome'],
         ];
     }
