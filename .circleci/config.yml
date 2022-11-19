@@ -6,23 +6,23 @@ version: 2
 jobs:
   test:
     docker:
-      - image: cimg/php:8.0-node  # primary container Ubuntu 22.04.1 LTS
+      - image: cimg/php:8.1-node  # primary container OS Ubuntu 22.04.1 LTS
         environment:
-          - APP_DEBUG: true
-          - APP_ENV: testing
-          - DB_HOST: 127.0.0.1
+          - APP_ENV: testing # use .env.testing
+          - DB_HOST: 127.0.0.1 # DB_XXX is for mysql-client
+          - DB_USER: root
+          - DB_PASS: root
 
       - image: cimg/mysql:8.0
         environment:
-          - MYSQL_ALLOW_EMPTY_PASSWORD: true
           - MYSQL_DATABASE: testing
+          - MYSQL_ROOT_PASSWORD: root
 
     working_directory: ~/application/
 
     steps:
       - checkout
       - run:
-            name: "node -v npm -v"
             working_directory: app
             command: node -v && npm -v
       - restore_cache:
@@ -64,12 +64,23 @@ jobs:
             done
             echo Failed waiting for MySQL && exit 1
       - run:
-          name: MySQL CLI のインストール; データベースの作成;
+          name: MySQL CLI のインストール; テスト用データベースの作成;
           command: |
             sudo apt-get update
             sudo apt-get install default-mysql-client
             echo 'CREATE DATABASE IF NOT EXISTS testing;' > ./create_test_database.sql
-            mysql -h 127.0.0.1 -u root < ./create_test_database.sql
+            mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASS} < ./create_test_database.sql
+
+      - run:
+          name: "migrate and seed"
+          working_directory: app
+          command: |
+            php artisan migrate --seed --env=testing
+      - run:
+          name: "Run PHPUnit"
+          working_directory: app
+          command: |
+            vendor/bin/phpunit ./tests
 
 workflows:
   version: 2
