@@ -1,0 +1,168 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: EC2 web site.
+
+# Logical name naming rules.
+# Pascal case = action
+# Snake case = resource(my~)
+
+Parameters:
+  KeyPair:
+    Description: select keypair.
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: lara_port_media-Key
+  NameTagPrefix:
+    Description: Name tag prefix.
+    Type: String
+    Default: lara_port_media
+
+Mappings:
+  StackConfig:
+    VPC:
+      CIDR: 192.168.0.0/16
+    Subnet:
+      CIDR: 192.168.0.0/24
+    EC2:
+      InstanceType: t2.micro
+      ImageId: ami-072bfb8ae2c884cc4 # Amazon Linux 2 Kernel 5.10 AMI 2.0.20221103.3 x86_64 HVM gp2
+
+Resources:
+  myVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !FindInMap [StackConfig, VPC, CIDR]
+      EnableDnsSupport: true
+      Tags:
+        - { Key: Name, Value: !Join ["-", [!Ref NameTagPrefix, vpc]] }
+
+  myInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - { Key: Name, Value: !Join ["-", [!Ref NameTagPrefix, internet_gateway]]}
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref myVPC
+      InternetGatewayId: !Ref myInternetGateway
+
+  mySubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-northeast-1a
+      VpcId: !Ref myVPC
+      CidrBlock: !FindInMap [StackConfig, Subnet, CIDR]
+      Tags:
+        - { Key: Name, Value: !Join ["-", [!Ref NameTagPrefix, subnet]] }
+
+  myRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref myVPC
+      Tags:
+        - { Key: Name, Value: !Join ["-", [!Ref NameTagPrefix, route_table]] }
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref myRouteTable
+      SubnetId: !Ref mySubnet
+  Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref myRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref myInternetGateway
+
+  mySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow ssh, http, https
+      GroupName: !Join ["-", [!Ref NameTagPrefix, web-sever-security-group]]
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - Description: Allow HTTP
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIpv6: ::/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIpv6: ::/0
+      Tags:
+        - {Key: Name, Value: !Join ["-", [!Ref NameTagPrefix, security_group]] }
+      VpcId: !Ref myVPC
+
+  myEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref KeyPair
+      ImageId: !FindInMap [StackConfig, EC2, ImageId]
+      InstanceType: !FindInMap [StackConfig, EC2, InstanceType]
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          GroupSet:
+            - !Ref mySecurityGroup
+          SubnetId: !Ref mySubnet
+      Monitoring: true
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -ex
+          timedatectl set-timezone Asia/Tokyo
+          # CodeDeploy Agent required Ruby2.6 or 2.7
+          amazon-linux-extras install -y docker ruby2.6
+          yum -y update && yum -y install wget
+          # install codedeploy-agent
+          wget https://aws-codedeploy-${AWS::Region}.s3.${AWS::Region}.amazonaws.com/latest/install \
+          && chmod +x ./install && ./install auto && sudo rm ./install
+          # install docker
+          gpasswd -a ec2-user docker
+          curl -L https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose \
+          && chmod +x /usr/local/bin/docker-compose
+          systemctl start codedeploy-agent.service docker.service
+          systemctl enable codedeploy-agent.service docker.service
+          cat <<-"EOL" >> /home/ec2-user/.bashrc
+          export ENV=production
+          export COMPOSE_PATH_SEPARATOR=:
+          export COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
+          sudo service codedeploy-agent status
+          docker -v && docker-compose -v
+          EOL
+      Tags:
+        - { Key: Name, Value: !Join ["-", [!Ref NameTagPrefix, ec2]] }
+
+  ServiceRoleForAWSCodeDeploy:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy
+      Tags:
+        - { Key: Name, Value: !Join ["-", [!Ref NameTagPrefix, role_ec2_for_CD]] }
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref ServiceRoleForAWSCodeDeploy
