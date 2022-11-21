@@ -1,0 +1,22 @@
+version: 0.0
+os: linux
+files:
+  - source: app/
+    destination: /var/www/app/
+  - source: docker/
+    destination: /home/ec2-user/docker/
+hooks:
+  BeforeInstall:
+    - location: scripts/code_deploy/hooks/BeforeInstall.bash
+      timeout: 180
+  AfterInstall:
+    - location: scripts/code_deploy/hooks/AfterInstall.bash
+      timeout: 180
+      runas: ec2-user
+permissions:
+  - object: /var/www/
+    owner: ec2-user
+    group: ec2-user
+  - object: /home/ec2-user/docker/
+    owner: ec2-user
+    group: ec2-user
