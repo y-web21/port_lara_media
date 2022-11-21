@@ -1,19 +1,34 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: EC2 web site.
 
-# Logical name naming rules.
-# Pascal case = action
-# Snake case = resource(my~)
-
 Parameters:
   KeyPair:
-    Description: select keypair.
     Type: AWS::EC2::KeyPair::KeyName
     Default: lara_port_media-Key
+    Description: select key pair 予め作成したEC2キーペアのNameタグの値を入れてください
   NameTagPrefix:
-    Description: Name tag prefix.
-    Type: String
     Default: lara_port_media
+    Type: String
+    Description: Name tag prefix
+  ApplicationName:
+    Default: lara_port_media
+    Type: String
+    Description: The name of the application which will be deployed
+  PipelineGitHubConnectionArn:
+    Type: String
+    Description: 予めコンソールからGitHubとの連携を行って取得してください(ConnectionArn)
+    # https://ap-northeast-1.console.aws.amazon.com/codesuite/codepipeline/pipelines Create Pipeline から
+  PipelineGitHubRepo:
+    Default: "y-web21/lara_port_media"
+    Type: String
+    Description: e.g. github_username/lara_port_media
+  PipelineGitHubBranch:
+    Default: "feature/#20"
+    Type: String
+  CodePipelineRoleArn:
+    Type: String
+  CodeDeployS3ArtifactBucket:
+    Type: String
 
 Mappings:
   StackConfig:
@@ -48,6 +63,9 @@ Resources:
   mySubnet:
     Type: AWS::EC2::Subnet
     Properties:
+      # AvailabilityZone: !Select
+      #   - 0
+      #   - Fn::GetAZs: !Ref 'AWS::Region'
       AvailabilityZone: ap-northeast-1a
       VpcId: !Ref myVPC
       CidrBlock: !FindInMap [StackConfig, Subnet, CIDR]
@@ -141,8 +159,9 @@ Resources:
           docker -v && docker-compose -v
           EOL
       Tags:
-        - { Key: Name, Value: !Join ["-", [!Ref NameTagPrefix, ec2]] }
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-ec2" }
 
+  # デプロイ先EC2のAssumeRole設定
   ServiceRoleForAWSCodeDeploy:
     Type: AWS::IAM::Role
     Properties:
@@ -159,10 +178,135 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy
       Tags:
-        - { Key: Name, Value: !Join ["-", [!Ref NameTagPrefix, role_ec2_for_CD]] }
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-IAM_ec2_for_CD" }
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
       Roles:
         - !Ref ServiceRoleForAWSCodeDeploy
+
+  # CodeDeployの設定
+  CodeDeployServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codedeploy.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole
+
+  myCodeDeployApplication:
+    Type: AWS::CodeDeploy::Application
+    Properties:
+      ApplicationName: !Sub "CodeDeployApp-${ApplicationName}"
+      ComputePlatform: Server
+      Tags:
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-cd_application" }
+
+  myCodeDeployDeploymentGroup:
+    Type: AWS::CodeDeploy::DeploymentGroup
+    Properties:
+      AutoRollbackConfiguration:
+        Enabled: true
+        Events:
+          - DEPLOYMENT_FAILURE
+      ApplicationName: !Ref myCodeDeployApplication
+      DeploymentConfigName: CodeDeployDefault.OneAtATime
+      DeploymentGroupName: !Sub "DeployGroup-${ApplicationName}"
+      DeploymentStyle:
+        DeploymentType: IN_PLACE
+        DeploymentOption: WITHOUT_TRAFFIC_CONTROL
+      Ec2TagSet:
+        Ec2TagSetList:
+          - Ec2TagGroup:
+              - Type: KEY_AND_VALUE
+                Key: "Name"
+                Value: !Sub "${NameTagPrefix}-ec2"
+      ServiceRoleArn: !GetAtt CodeDeployServiceRole.Arn
+      Tags:
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-cd_deployment_group" }
+
+  CodePipelineServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      # RoleName: !Sub CodePipeline-${ApplicationName}-Role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codepipeline.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      # ManagedPolicyArns:
+      #   - arn:aws:iam::aws:policy/AWSCodePipeline_FullAccess
+      Policies:
+        - PolicyName: !Sub CodePipeline-${ApplicationName}-Role
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "*"
+                Resource:
+                  - "*"
+      Tags:
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-IAM_CodePipeline" }
+
+  myCodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub "CodePipeline-${ApplicationName}"
+      ArtifactStore:
+        Type: S3
+        Location: !Ref CodeDeployS3ArtifactBucket
+      RoleArn: !Ref CodePipelineRoleArn
+      # RoleArn: !Ref CodePipelineServiceRole
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeStarSourceConnection
+                Version: '1'
+              Configuration:
+                BranchName: !Ref PipelineGitHubBranch
+                ConnectionArn: !Ref PipelineGitHubConnectionArn
+                FullRepositoryId: !Ref PipelineGitHubRepo
+                OutputArtifactFormat: CODE_ZIP
+              OutputArtifacts:
+                - Name: SourceArtifact
+              # Region: ap-northeast-1
+              RunOrder: 1
+        - Name: Deploy
+          Actions:
+            - ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CodeDeploy
+                Version: '1'
+              Configuration:
+                ApplicationName: !Ref myCodeDeployApplication
+                DeploymentGroupName: !Ref myCodeDeployDeploymentGroup
+              InputArtifacts:
+                - Name: SourceArtifact
+              Name: Deploy
+              # Namespace: DeployVariables
+              OutputArtifacts: []
+              # Region: ap-northeast-1
+              RunOrder: 1
+
+Outputs:
+  AZs:
+    Value: !Join [ ", ", !GetAZs ap-northeast-1 ]
+  Region:
+    Value: !Sub ${AWS::Region}
