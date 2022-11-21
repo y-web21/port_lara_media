@@ -19,7 +19,7 @@ Parameters:
     Description: 予めコンソールからGitHubとの連携を行って取得してください(ConnectionArn)
     # https://ap-northeast-1.console.aws.amazon.com/codesuite/codepipeline/pipelines Create Pipeline から
   PipelineGitHubRepo:
-    Default: "y-web21/lara_port_media"
+    Default: "y-web21/port_lara_media"
     Type: String
     Description: e.g. github_username/lara_port_media
   PipelineGitHubBranch:
@@ -178,7 +178,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy
       Tags:
-        - { Key: Name, Value: !Sub "${NameTagPrefix}-IAM_ec2_for_CD" }
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-role_ec2_for_CD" }
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -196,11 +196,13 @@ Resources:
           - Effect: Allow
             Principal:
               Service:
+                - ec2.amazonaws.com
                 - codedeploy.amazonaws.com
             Action:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
 
   myCodeDeployApplication:
     Type: AWS::CodeDeploy::Application
@@ -218,7 +220,7 @@ Resources:
         Events:
           - DEPLOYMENT_FAILURE
       ApplicationName: !Ref myCodeDeployApplication
-      DeploymentConfigName: CodeDeployDefault.OneAtATime
+      DeploymentConfigName: CodeDeployDefault.AllAtOnce
       DeploymentGroupName: !Sub "DeployGroup-${ApplicationName}"
       DeploymentStyle:
         DeploymentType: IN_PLACE
@@ -227,12 +229,14 @@ Resources:
         Ec2TagSetList:
           - Ec2TagGroup:
               - Type: KEY_AND_VALUE
-                Key: "Name"
-                Value: !Sub "${NameTagPrefix}-ec2"
+                Key: Name
+                Value: lara_port_media-ec2
       ServiceRoleArn: !GetAtt CodeDeployServiceRole.Arn
       Tags:
         - { Key: Name, Value: !Sub "${NameTagPrefix}-cd_deployment_group" }
+    DependsOn: myEC2Instance
 
+  # 未使用
   CodePipelineServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -258,7 +262,13 @@ Resources:
                 Resource:
                   - "*"
       Tags:
-        - { Key: Name, Value: !Sub "${NameTagPrefix}-IAM_CodePipeline" }
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-role_CodePipeline" }
+
+  # S3Bucket
+  # ArtifactBucket:
+  #   Type: AWS::S3::Bucket
+  #   Properties:
+  #     BucketName: !Sub 'codepipeline-${AWS::Region}-${AWS::AccountId}'
 
   myCodePipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -267,6 +277,7 @@ Resources:
       ArtifactStore:
         Type: S3
         Location: !Ref CodeDeployS3ArtifactBucket
+        # Location: !Ref ArtifactBucket
       RoleArn: !Ref CodePipelineRoleArn
       # RoleArn: !Ref CodePipelineServiceRole
       Stages:
@@ -289,7 +300,8 @@ Resources:
               RunOrder: 1
         - Name: Deploy
           Actions:
-            - ActionTypeId:
+            - Name: DeployAction
+              ActionTypeId:
                 Category: Deploy
                 Owner: AWS
                 Provider: CodeDeploy
@@ -299,10 +311,9 @@ Resources:
                 DeploymentGroupName: !Ref myCodeDeployDeploymentGroup
               InputArtifacts:
                 - Name: SourceArtifact
-              Name: Deploy
-              # Namespace: DeployVariables
+              Namespace: DeployVariables
               OutputArtifacts: []
-              # Region: ap-northeast-1
+              Region: ap-northeast-1
               RunOrder: 1
 
 Outputs:
