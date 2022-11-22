@@ -265,10 +265,10 @@ Resources:
         - { Key: Name, Value: !Sub "${NameTagPrefix}-role_CodePipeline" }
 
   # S3Bucket
-  # ArtifactBucket:
-  #   Type: AWS::S3::Bucket
-  #   Properties:
-  #     BucketName: !Sub 'codepipeline-${AWS::Region}-${AWS::AccountId}'
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'codepipeline-${AWS::Region}-${AWS::AccountId}'
 
   myCodePipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -276,8 +276,8 @@ Resources:
       Name: !Sub "CodePipeline-${ApplicationName}"
       ArtifactStore:
         Type: S3
-        Location: !Ref CodeDeployS3ArtifactBucket
-        # Location: !Ref ArtifactBucket
+        # Location: !Ref CodeDeployS3ArtifactBucket
+        Location: !Ref ArtifactBucket
       RoleArn: !Ref CodePipelineRoleArn
       # RoleArn: !Ref CodePipelineServiceRole
       Stages:
