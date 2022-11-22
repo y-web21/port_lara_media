@@ -1,19 +1,39 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: EC2 web site.
-
-# Logical name naming rules.
-# Pascal case = action
-# Snake case = resource(my~)
+Description: EC2, codedeploy from GitHub(codepipeline, S3) を構成します。
 
 Parameters:
+  # common
+  ServiceName:
+    Default: lara-port-media
+    Type: String
+    Description: must be kebab case.
+  NameTagPrefix:
+    Default: lara_port_media
+    Type: String
+    Description: Name tag prefix. Also used as the S3 bucket name.
+  DeployAppName:
+    Default: deploy-lara_port_media
+    Type: String
+    Description: AWS codedeploy application name
+  # EC2
   KeyPair:
-    Description: select keypair.
     Type: AWS::EC2::KeyPair::KeyName
     Default: lara_port_media-Key
-  NameTagPrefix:
-    Description: Name tag prefix.
+    Description: select key pair 予め作成したEC2キーペアのNameタグの値を入れてください
+  # code deploy and pipeline
+  ArtifactS3suffix:
+    Default: lpm
     Type: String
-    Default: lara_port_media
+    Description: Bucket name should not contain uppercase and underscore.
+  CodeStarGithubConnectionArn:
+    Type: String
+    Description: 予めコンソールからGitHubとの連携を行って取得してください(CodeStarConnectionArn)
+    # https://ap-northeast-1.console.aws.amazon.com/codesuite/settings/connections
+  PipelineGitHubRepo:
+    Type: String
+    Description: e.g. github_username/repo_name
+  PipelineGitHubBranch:
+    Type: String
 
 Mappings:
   StackConfig:
@@ -26,6 +46,7 @@ Mappings:
       ImageId: ami-072bfb8ae2c884cc4 # Amazon Linux 2 Kernel 5.10 AMI 2.0.20221103.3 x86_64 HVM gp2
 
 Resources:
+  # デプロイ先EC2の構成
   myVPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -48,7 +69,9 @@ Resources:
   mySubnet:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZone: ap-northeast-1a
+      AvailabilityZone: !Select
+        - 0
+        - Fn::GetAZs: !Ref AWS::Region
       VpcId: !Ref myVPC
       CidrBlock: !FindInMap [StackConfig, Subnet, CIDR]
       Tags:
@@ -141,8 +164,9 @@ Resources:
           docker -v && docker-compose -v
           EOL
       Tags:
-        - { Key: Name, Value: !Join ["-", [!Ref NameTagPrefix, ec2]] }
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-ec2" }
 
+  # デプロイ先EC2のAssumeRole設定
   ServiceRoleForAWSCodeDeploy:
     Type: AWS::IAM::Role
     Properties:
@@ -159,10 +183,233 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy
       Tags:
-        - { Key: Name, Value: !Join ["-", [!Ref NameTagPrefix, role_ec2_for_CD]] }
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-role_ec2_for_CD" }
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
       Roles:
         - !Ref ServiceRoleForAWSCodeDeploy
+
+  # S3ArtifactBucket
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain  # 空でなければバケットを残して、スタックを削除を続行する
+    Properties:
+      BucketName: !Sub 'codepipeline-${AWS::Region}-${AWS::AccountId}-${ArtifactS3suffix}'
+      Tags:
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-deploy_s3bucket" }
+
+  # CodeDeployの設定
+  CodeDeployServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+                - codedeploy.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+
+  myCodeDeployApplication:
+    Type: AWS::CodeDeploy::Application
+    Properties:
+      ApplicationName: !Sub "${DeployAppName}"
+      ComputePlatform: Server
+      Tags:
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-cd_application" }
+
+  myCodeDeployDeploymentGroup:
+    Type: AWS::CodeDeploy::DeploymentGroup
+    Properties:
+      AutoRollbackConfiguration:
+        Enabled: true
+        Events:
+          - DEPLOYMENT_FAILURE
+      ApplicationName: !Ref myCodeDeployApplication
+      DeploymentConfigName: CodeDeployDefault.AllAtOnce
+      DeploymentGroupName: !Sub "DeployGroup-${DeployAppName}"
+      DeploymentStyle:
+        DeploymentType: IN_PLACE
+        DeploymentOption: WITHOUT_TRAFFIC_CONTROL
+      Ec2TagSet:
+        Ec2TagSetList:
+          - Ec2TagGroup:
+              - Type: KEY_AND_VALUE
+                Key: Name
+                Value: lara_port_media-ec2
+      ServiceRoleArn: !GetAtt CodeDeployServiceRole.Arn
+      Tags:
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-cd_deployment_group" }
+    DependsOn: myEC2Instance
+
+  CodePipelineServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub CodePipeline-${ServiceName}-Role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codepipeline.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: !Sub CodePipeline-${ServiceName}-Role
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - iam:PassRole
+                Resource: '*'
+                Effect: Allow
+                Condition:
+                  StringEqualsIfExists:
+                    iam:PassedToService:
+                      - cloudformation.amazonaws.com
+                      - elasticbeanstalk.amazonaws.com
+                      - ec2.amazonaws.com
+                      - ecs-tasks.amazonaws.com
+              - Action:
+                  - codecommit:CancelUploadArchive
+                  - codecommit:GetBranch
+                  - codecommit:GetCommit
+                  - codecommit:GetRepository
+                  - codecommit:GetUploadArchiveStatus
+                  - codecommit:UploadArchive
+                Resource: '*'
+                Effect: Allow
+              - Action:
+                  - codedeploy:CreateDeployment
+                  - codedeploy:GetApplication
+                  - codedeploy:GetApplicationRevision
+                  - codedeploy:GetDeployment
+                  - codedeploy:GetDeploymentConfig
+                  - codedeploy:RegisterApplicationRevision
+                Resource: '*'
+                Effect: Allow
+              - Action:
+                  - codestar-connections:UseConnection
+                Resource: '*'
+                Effect: Allow
+              - Action:
+                  - elasticbeanstalk:*
+                  - ec2:*
+                  - elasticloadbalancing:*
+                  - autoscaling:*
+                  - cloudwatch:*
+                  - s3:*
+                  - cloudformation:*
+                Resource: '*'
+                Effect: Allow
+              - Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:UpdateStack
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:SetStackPolicy
+                  - cloudformation:ValidateTemplate
+                Resource: '*'
+                Effect: Allow
+              - Effect: Allow
+                Action:
+                  - devicefarm:ListProjects
+                  - devicefarm:ListDevicePools
+                  - devicefarm:GetRun
+                  - devicefarm:GetUpload
+                  - devicefarm:CreateUpload
+                  - devicefarm:ScheduleRun
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - servicecatalog:ListProvisioningArtifacts
+                  - servicecatalog:CreateProvisioningArtifact
+                  - servicecatalog:DescribeProvisioningArtifact
+                  - servicecatalog:DeleteProvisioningArtifact
+                  - servicecatalog:UpdateProduct
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - cloudformation:ValidateTemplate
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ecr:DescribeImages
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - states:DescribeExecution
+                  - states:DescribeStateMachine
+                  - states:StartExecution
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - appconfig:StartDeployment
+                  - appconfig:StopDeployment
+                  - appconfig:GetDeployment
+                Resource: '*'
+      Tags:
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-role_code_pipeline" }
+
+  myCodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub "CodePipeline-${DeployAppName}"
+      ArtifactStore:
+        Type: S3
+        Location: !Ref ArtifactBucket
+      RoleArn: !GetAtt [CodePipelineServiceRole, Arn]
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeStarSourceConnection
+                Version: "1"
+              Configuration:
+                BranchName: !Ref PipelineGitHubBranch
+                ConnectionArn: !Ref CodeStarGithubConnectionArn
+                FullRepositoryId: !Ref PipelineGitHubRepo
+                OutputArtifactFormat: CODE_ZIP
+              OutputArtifacts:
+                - Name: SourceArtifact
+              RunOrder: 1
+        - Name: Deploy
+          Actions:
+            - Name: DeployAction
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CodeDeploy
+                Version: "1"
+              Configuration:
+                ApplicationName: !Ref myCodeDeployApplication
+                DeploymentGroupName: !Ref myCodeDeployDeploymentGroup
+              InputArtifacts:
+                - Name: SourceArtifact
+              Namespace: DeployVariables
+              OutputArtifacts: []
+              Region: ap-northeast-1
+              RunOrder: 1
+      Tags:
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-code_pipeline" }
+
+Outputs:
+  AZs:
+    Value: !Join [ ", ", !GetAZs ap-northeast-1 ]
+  Region:
+    Value: !Sub ${AWS::Region}
