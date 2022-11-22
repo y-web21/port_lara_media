@@ -34,8 +34,6 @@ Parameters:
     Description: e.g. github_username/repo_name
   PipelineGitHubBranch:
     Type: String
-  CodePipelineRoleArn:
-    Type: String
 
 Mappings:
   StackConfig:
@@ -252,28 +250,10 @@ Resources:
         - { Key: Name, Value: !Sub "${NameTagPrefix}-cd_deployment_group" }
     DependsOn: myEC2Instance
 
-  # CodePipelineの設定
-
-  # CodeDeployServiceRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - ec2.amazonaws.com
-  #               - codedeploy.amazonaws.com
-  #           Action:
-  #             - sts:AssumeRole
-  #     ManagedPolicyArns:
-  #       - arn:aws:iam::aws:policy/service
-
   CodePipelineServiceRole:
     Type: AWS::IAM::Role
     Properties:
-      # RoleName: !Sub CodePipeline-${ApplicationName}-Role
+      RoleName: !Sub CodePipeline-${ServiceName}-Role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -282,8 +262,6 @@ Resources:
             Service: codepipeline.amazonaws.com
           Action: sts:AssumeRole
       Path: /
-      # ManagedPolicyArns:
-      #   - arn:aws:iam::aws:policy/AWSCodePipeline_FullAccess
       Policies:
         - PolicyName: !Sub CodePipeline-${ServiceName}-Role
           PolicyDocument:
@@ -329,27 +307,7 @@ Resources:
                   - autoscaling:*
                   - cloudwatch:*
                   - s3:*
-                  - sns:*
                   - cloudformation:*
-                  - rds:*
-                  - sqs:*
-                  - ecs:*
-                Resource: '*'
-                Effect: Allow
-              - Action:
-                  - lambda:InvokeFunction
-                  - lambda:ListFunctions
-                Resource: '*'
-                Effect: Allow
-              - Action:
-                  - opsworks:CreateDeployment
-                  - opsworks:DescribeApps
-                  - opsworks:DescribeCommands
-                  - opsworks:DescribeDeployments
-                  - opsworks:DescribeInstances
-                  - opsworks:DescribeStacks
-                  - opsworks:UpdateApp
-                  - opsworks:UpdateStack
                 Resource: '*'
                 Effect: Allow
               - Action:
@@ -363,13 +321,6 @@ Resources:
                   - cloudformation:ExecuteChangeSet
                   - cloudformation:SetStackPolicy
                   - cloudformation:ValidateTemplate
-                Resource: '*'
-                Effect: Allow
-              - Action:
-                  - codebuild:BatchGetBuilds
-                  - codebuild:StartBuild
-                  - codebuild:BatchGetBuildBatches
-                  - codebuild:StartBuildBatch
                 Resource: '*'
                 Effect: Allow
               - Effect: Allow
@@ -410,13 +361,7 @@ Resources:
                   - appconfig:GetDeployment
                 Resource: '*'
       Tags:
-        - { Key: Name, Value: !Sub "${NameTagPrefix}-role_CodePipeline" }
-# PolicyVersion:
-#   Document:
-
-  #   Version: "2012-10-17"
-  # VersionId: v1
-  # IsDefaultVersion: true
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-role_code_pipeline" }
 
   myCodePipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -425,8 +370,7 @@ Resources:
       ArtifactStore:
         Type: S3
         Location: !Ref ArtifactBucket
-      # RoleArn: !Ref CodePipelineRoleArn
-      RoleArn: !GetAtt CodePipelineServiceRole.Arn
+      RoleArn: !GetAtt [CodePipelineServiceRole, Arn]
       Stages:
         - Name: Source
           Actions:
@@ -461,6 +405,8 @@ Resources:
               OutputArtifacts: []
               Region: ap-northeast-1
               RunOrder: 1
+      Tags:
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-code_pipeline" }
 
 Outputs:
   AZs:
