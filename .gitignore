@@ -125,3 +125,4 @@ $RECYCLE.BIN/
 *.bak
 *.bak/
 *.env
+.env.aws
