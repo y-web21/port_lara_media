@@ -236,37 +236,10 @@ Resources:
         - { Key: Name, Value: !Sub "${NameTagPrefix}-cd_deployment_group" }
     DependsOn: myEC2Instance
 
-  # 未使用
-  CodePipelineServiceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      # RoleName: !Sub CodePipeline-${ApplicationName}-Role
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          Effect: Allow
-          Principal:
-            Service: codepipeline.amazonaws.com
-          Action: sts:AssumeRole
-      Path: /
-      # ManagedPolicyArns:
-      #   - arn:aws:iam::aws:policy/AWSCodePipeline_FullAccess
-      Policies:
-        - PolicyName: !Sub CodePipeline-${ApplicationName}-Role
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - "*"
-                Resource:
-                  - "*"
-      Tags:
-        - { Key: Name, Value: !Sub "${NameTagPrefix}-role_CodePipeline" }
-
   # S3Bucket
   ArtifactBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
     Properties:
       BucketName: !Sub 'codepipeline-${AWS::Region}-${AWS::AccountId}'
 
@@ -279,7 +252,6 @@ Resources:
         # Location: !Ref CodeDeployS3ArtifactBucket
         Location: !Ref ArtifactBucket
       RoleArn: !Ref CodePipelineRoleArn
-      # RoleArn: !Ref CodePipelineServiceRole
       Stages:
         - Name: Source
           Actions:
@@ -296,7 +268,6 @@ Resources:
                 OutputArtifactFormat: CODE_ZIP
               OutputArtifacts:
                 - Name: SourceArtifact
-              # Region: ap-northeast-1
               RunOrder: 1
         - Name: Deploy
           Actions:
