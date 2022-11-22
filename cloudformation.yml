@@ -2,10 +2,11 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: EC2, codedeploy from GitHub(codepipeline, S3) を構成します。
 
 Parameters:
-  KeyPair:
-    Type: AWS::EC2::KeyPair::KeyName
-    Default: lara_port_media-Key
-    Description: select key pair 予め作成したEC2キーペアのNameタグの値を入れてください
+  # common
+  ServiceName:
+    Default: lara-port-media
+    Type: String
+    Description: must be kebab case.
   NameTagPrefix:
     Default: lara_port_media
     Type: String
@@ -14,6 +15,12 @@ Parameters:
     Default: deploy-lara_port_media
     Type: String
     Description: AWS codedeploy application name
+  # EC2
+  KeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: lara_port_media-Key
+    Description: select key pair 予め作成したEC2キーペアのNameタグの値を入れてください
+  # code deploy and pipeline
   ArtifactS3suffix:
     Default: lpm
     Type: String
@@ -186,6 +193,15 @@ Resources:
       Roles:
         - !Ref ServiceRoleForAWSCodeDeploy
 
+  # S3ArtifactBucket
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain  # 空でなければバケットを残して、スタックを削除を続行する
+    Properties:
+      BucketName: !Sub 'codepipeline-${AWS::Region}-${AWS::AccountId}-${ArtifactS3suffix}'
+      Tags:
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-deploy_s3bucket" }
+
   # CodeDeployの設定
   CodeDeployServiceRole:
     Type: AWS::IAM::Role
@@ -236,14 +252,171 @@ Resources:
         - { Key: Name, Value: !Sub "${NameTagPrefix}-cd_deployment_group" }
     DependsOn: myEC2Instance
 
-  # S3ArtifactBucket
-  ArtifactBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
+  # CodePipelineの設定
+
+  # CodeDeployServiceRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Effect: Allow
+  #           Principal:
+  #             Service:
+  #               - ec2.amazonaws.com
+  #               - codedeploy.amazonaws.com
+  #           Action:
+  #             - sts:AssumeRole
+  #     ManagedPolicyArns:
+  #       - arn:aws:iam::aws:policy/service
+
+  CodePipelineServiceRole:
+    Type: AWS::IAM::Role
     Properties:
-      BucketName: !Sub 'codepipeline-${AWS::Region}-${AWS::AccountId}-${ArtifactS3suffix}'
+      # RoleName: !Sub CodePipeline-${ApplicationName}-Role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codepipeline.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      # ManagedPolicyArns:
+      #   - arn:aws:iam::aws:policy/AWSCodePipeline_FullAccess
+      Policies:
+        - PolicyName: !Sub CodePipeline-${ServiceName}-Role
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - iam:PassRole
+                Resource: '*'
+                Effect: Allow
+                Condition:
+                  StringEqualsIfExists:
+                    iam:PassedToService:
+                      - cloudformation.amazonaws.com
+                      - elasticbeanstalk.amazonaws.com
+                      - ec2.amazonaws.com
+                      - ecs-tasks.amazonaws.com
+              - Action:
+                  - codecommit:CancelUploadArchive
+                  - codecommit:GetBranch
+                  - codecommit:GetCommit
+                  - codecommit:GetRepository
+                  - codecommit:GetUploadArchiveStatus
+                  - codecommit:UploadArchive
+                Resource: '*'
+                Effect: Allow
+              - Action:
+                  - codedeploy:CreateDeployment
+                  - codedeploy:GetApplication
+                  - codedeploy:GetApplicationRevision
+                  - codedeploy:GetDeployment
+                  - codedeploy:GetDeploymentConfig
+                  - codedeploy:RegisterApplicationRevision
+                Resource: '*'
+                Effect: Allow
+              - Action:
+                  - codestar-connections:UseConnection
+                Resource: '*'
+                Effect: Allow
+              - Action:
+                  - elasticbeanstalk:*
+                  - ec2:*
+                  - elasticloadbalancing:*
+                  - autoscaling:*
+                  - cloudwatch:*
+                  - s3:*
+                  - sns:*
+                  - cloudformation:*
+                  - rds:*
+                  - sqs:*
+                  - ecs:*
+                Resource: '*'
+                Effect: Allow
+              - Action:
+                  - lambda:InvokeFunction
+                  - lambda:ListFunctions
+                Resource: '*'
+                Effect: Allow
+              - Action:
+                  - opsworks:CreateDeployment
+                  - opsworks:DescribeApps
+                  - opsworks:DescribeCommands
+                  - opsworks:DescribeDeployments
+                  - opsworks:DescribeInstances
+                  - opsworks:DescribeStacks
+                  - opsworks:UpdateApp
+                  - opsworks:UpdateStack
+                Resource: '*'
+                Effect: Allow
+              - Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:UpdateStack
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:SetStackPolicy
+                  - cloudformation:ValidateTemplate
+                Resource: '*'
+                Effect: Allow
+              - Action:
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                  - codebuild:BatchGetBuildBatches
+                  - codebuild:StartBuildBatch
+                Resource: '*'
+                Effect: Allow
+              - Effect: Allow
+                Action:
+                  - devicefarm:ListProjects
+                  - devicefarm:ListDevicePools
+                  - devicefarm:GetRun
+                  - devicefarm:GetUpload
+                  - devicefarm:CreateUpload
+                  - devicefarm:ScheduleRun
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - servicecatalog:ListProvisioningArtifacts
+                  - servicecatalog:CreateProvisioningArtifact
+                  - servicecatalog:DescribeProvisioningArtifact
+                  - servicecatalog:DeleteProvisioningArtifact
+                  - servicecatalog:UpdateProduct
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - cloudformation:ValidateTemplate
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ecr:DescribeImages
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - states:DescribeExecution
+                  - states:DescribeStateMachine
+                  - states:StartExecution
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - appconfig:StartDeployment
+                  - appconfig:StopDeployment
+                  - appconfig:GetDeployment
+                Resource: '*'
       Tags:
-        - { Key: Name, Value: !Sub "${NameTagPrefix}-deploy_s3bucket" }
+        - { Key: Name, Value: !Sub "${NameTagPrefix}-role_CodePipeline" }
+# PolicyVersion:
+#   Document:
+
+  #   Version: "2012-10-17"
+  # VersionId: v1
+  # IsDefaultVersion: true
 
   myCodePipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -252,7 +425,8 @@ Resources:
       ArtifactStore:
         Type: S3
         Location: !Ref ArtifactBucket
-      RoleArn: !Ref CodePipelineRoleArn
+      # RoleArn: !Ref CodePipelineRoleArn
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
       Stages:
         - Name: Source
           Actions:
