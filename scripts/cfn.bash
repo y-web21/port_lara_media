@@ -8,7 +8,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
 # project settings
 STACK_NAME=port-lara-media-Stack
 GITHUB_REPO='y-web21/port_lara_media'
-BRANCH='feature/#20'
+BRANCH='main'
 DEPLOY_APP_NAME='deploy-lara_port_media'
 DEPLOY_GROUP_NAME='DeployGroup-'$DEPLOY_APP_NAME
 # ===============================================
@@ -63,6 +63,17 @@ cfn-delete-prj-stack() {
     :
     ;;
   esac
+}
+
+cfn-update-prj-stack() {
+  aws cloudformation update-stack \
+  --template-body file://${CFN_YAML} \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --stack-name ${STACK_NAME} \
+  --parameters \
+    ParameterKey='CodeStarGithubConnectionArn',ParameterValue="${CODE_STAR_CONNECTION_ARN}" \
+    ParameterKey='PipelineGitHubRepo',ParameterValue="${GITHUB_REPO}" \
+    ParameterKey='PipelineGitHubBranch',ParameterValue="${BRANCH}"
 }
 
 ls(){
