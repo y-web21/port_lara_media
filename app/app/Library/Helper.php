@@ -2,6 +2,8 @@
 
 namespace App\Library;
 
+use App\Consts\Navigation;
+
 class Helper
 {
     public function __construct()
@@ -35,4 +37,21 @@ class Helper
         return $columns;
     }
 
+    /**
+     * 相対URL(ベースURLなし)から最初の文字列を返します
+     * 例えば、 first/second/third では、 first が返ります。
+     * スラッシュを含みません。
+     *
+     * @param string $rel
+     * @return string
+     */
+    public static function getUrlCategory(string $rel){
+        if ($rel === '' ) {
+            return Navigation::HOME;
+        };
+        if (!strpos('/', $rel)) {
+            return $rel;
+        };
+        return explode('/', $rel)[0];
+    }
 }

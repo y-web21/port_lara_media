@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\AboutController;
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LoginController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -17,4 +20,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/welcome', function () {
     return view('welcome');
 });
-Route::resource('/', ArticleController::class, ['names' => ['index' => 'home']])->only(['index']);
+Route::resource('/', HomeController::class)->only(['index']);
+Route::resource('/about', AboutController::class)->only(['index']);
+Route::resource('/article', ArticleController::class)->only(['index']);
+Route::resource('/home', HomeController::class)->only(['index']);
+Route::resource('/login', LoginController::class)->only(['index']);

@@ -15,7 +15,6 @@
   $disp_header = @$disp_header ?: false;
   $disp_gnav = @$disp_gnav ?: false;
   $disp_footer = @$disp_footer ?: false;
-
 @endphp
 
 <body>
@@ -25,7 +24,7 @@
     @show
 
     @section('global-nav')
-      {{-- @include('layouts.gnav', [ $disp_gnav ]) --}}
+      @include('layouts.gnav', [ $disp_gnav ])
     @show
 
     <div class="container mx-auto">
