@@ -1,6 +1,6 @@
 @php
   $current_category = Helper::getUrlCategory(Request::path());
-  //   var_dump($current_category);
+  var_dump($current_category);
 @endphp
 
 @switch($hid_gnav ?? true)
@@ -44,11 +44,9 @@
                 </form>
                 </li>
               @endif
-
             </ul>
           </div>
         </div>
-
       </div>
     </nav>
   @break

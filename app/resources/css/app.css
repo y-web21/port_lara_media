@@ -1,7 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+@import url("./style.css");
 
 /* my tailwind classes */
 .btn-white{
