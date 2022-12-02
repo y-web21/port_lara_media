@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Article;
 use Illuminate\Http\Request;
 
-class ArticleController extends Controller
+class HomeController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,9 +13,7 @@ class ArticleController extends Controller
      */
     public function index()
     {
-        // $articles = Article::Publish()->orderBy('created_at', 'desc')->limit(200)->get();
-        $articles = Article::orderBy('created_at', 'desc')->limit(200)->get();
-        return view('public.articles', compact('articles'));
+        return view('public.index');
     }
 
     /**

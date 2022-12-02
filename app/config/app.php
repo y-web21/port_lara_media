@@ -210,6 +210,7 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
        'Helper' => App\Library\Helper::class,
+       'Navigation' => App\Consts\Navigation::class,
     ])->toArray(),
 
 ];
