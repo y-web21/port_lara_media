@@ -14,4 +14,10 @@ const mix = require('laravel-mix');
 mix.js('resources/js/app.js', 'public/js')
     .postCss('resources/css/app.css', 'public/css', [
         require('tailwindcss'),
-    ]);
+    ])
+    .browserSync({
+      proxy: "web", // web server コンテナ名を指定
+      files: ['./resources/**/*', './public/**/*'],
+      open: true,
+      reloadOnRestart: true,
+  });
