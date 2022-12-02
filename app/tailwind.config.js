@@ -4,8 +4,9 @@ module.exports = {
     "./resources/**/*.blade.php",
     "./resources/**/*.js",
   ],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-}
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/line-clamp'),
+    require('@tailwindcss/aspect-ratio'),
+  ]
+};

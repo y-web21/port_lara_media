@@ -46,7 +46,7 @@ class Helper
      * @return string
      */
     public static function getUrlCategory(string $rel){
-        if ($rel === '' ) {
+        if ($rel === '' || $rel === '/' ) {
             return Navigation::HOME;
         };
         if (!strpos('/', $rel)) {
