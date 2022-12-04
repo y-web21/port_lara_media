@@ -65,8 +65,6 @@ cfn-delete-prj-stack() {
   esac
 }
 
-<<<<<<< HEAD
-=======
 cfn-update-prj-stack() {
   aws cloudformation update-stack \
   --template-body file://${CFN_YAML} \
@@ -78,7 +76,6 @@ cfn-update-prj-stack() {
     ParameterKey='PipelineGitHubBranch',ParameterValue="${BRANCH}"
 }
 
->>>>>>> dev
 ls(){
   declare -F | awk '{print $3}'
 }
