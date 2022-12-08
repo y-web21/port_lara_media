@@ -16,7 +16,7 @@ mix.js('resources/js/app.js', 'public/js')
         require('tailwindcss'),
     ])
     .browserSync({
-      proxy: "web", // web server コンテナ名を指定
+      proxy: "http://localhost:50080",
       files: ['./resources/**/*', './public/**/*'],
       open: true,
       reloadOnRestart: true,
