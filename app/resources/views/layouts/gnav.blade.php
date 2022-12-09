@@ -29,8 +29,10 @@
             <ul class="rounded-md border border-gray-400 bg-white px-2 pt-2 text-sm">
               @if (!Auth::check())
                 @foreach (Navigation::LIST_GLOBAL_LOGIN as $nav_cotegory => $action)
+                  {{-- <li><a class="whitespace-no-wrap nav-focus mx-auto mb-2 block pt-1"
+                      href="{{ route("{$nav_cotegory}.{$action}") }}">{{ ucfirst($nav_cotegory) }}</a> --}}
                   <li><a class="whitespace-no-wrap nav-focus mx-auto mb-2 block pt-1"
-                      href="{{ route("{$nav_cotegory}.{$action}") }}">{{ ucfirst($nav_cotegory) }}</a>
+                      href="{{ route('login') }}">{{ ucfirst($nav_cotegory) }}</a>
                 @endforeach
               @else
                 @foreach (Navigation::LIST_GLOBAL_LOGIN_AUTH as $nav_cotegory => $action)
