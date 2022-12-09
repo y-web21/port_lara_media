@@ -2,20 +2,25 @@
 
 namespace Database\Factories;
 
-use Carbon\Carbon;
+use App\Models\Team;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Laravel\Jetstream\Features;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
- */
 class UserFactory extends Factory
 {
     /**
+     * The name of the factory's corresponding model.
+     *
+     * @var string
+     */
+    protected $model = User::class;
+
+    /**
      * Define the model's default state.
      *
-     * @return array<string, mixed>
+     * @return array
      */
     public function definition()
     {
@@ -31,7 +36,7 @@ class UserFactory extends Factory
     /**
      * Indicate that the model's email address should be unverified.
      *
-     * @return static
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
      */
     public function unverified()
     {
@@ -43,38 +48,22 @@ class UserFactory extends Factory
     }
 
     /**
-     * randVerifiedDate
+     * Indicate that the user should have a personal team.
      *
-     * @param  int $days RAND_MAX value
-     * @return self
+     * @return $this
      */
-    public function randVerifiedDate(int $days = 7): self
+    public function withPersonalTeam()
     {
-        return $this->state(function () use ($days) {
-            return [
-                'email_verified_at' => Carbon::now()->addMinutes(-(mt_rand(0, 60 * 24 * $days)))
-            ];
-        });
-    }
+        if (! Features::hasTeamFeatures()) {
+            return $this->state([]);
+        }
 
-    /**
-     * @param string $pass password string
-     * @return self
-     */
-    public function setPass(string $pass = ''): self
-    {
-        return $this->state([
-            'password' => Hash::make($pass),
-        ]);
-    }
-
-    /**
-     * for dev and test
-     *
-     * @return self
-     */
-    public function unsafePass(): self
-    {
-        return $this->setPass('pass');
+        return $this->has(
+            Team::factory()
+                ->state(function (array $attributes, User $user) {
+                    return ['name' => $user->name.'\'s Team', 'user_id' => $user->id, 'personal_team' => true];
+                }),
+            'ownedTeams'
+        );
     }
 }
