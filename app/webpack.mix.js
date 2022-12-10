@@ -16,12 +16,9 @@ mix.js('resources/js/app.js', 'public/js')
     require('tailwindcss'),
   ])
   .browserSync({
-    proxy: "http://localhost:50080",
-    files: ['./resources/**/*', './public/**/*'],
+    // proxy: "http://localhost:50080", // Docker ホストから npx mix watch する場合
+    proxy: "web",  // コンテナ内から npx mix watch する場合はコンテナ名を指定する
+    files: ['./resources/**/*', './public/**/*', './app/**/*'],
     open: true,
     reloadOnRestart: true,
   });
-
-if (mix.inProduction()) {
-  mix.version();
-}
