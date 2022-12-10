@@ -24,4 +24,14 @@ Route::resource('/', HomeController::class)->only(['index']);
 Route::resource('/about', AboutController::class)->only(['index']);
 Route::resource('/article', ArticleController::class)->only(['index']);
 Route::resource('/home', HomeController::class)->only(['index']);
-Route::resource('/login', LoginController::class)->only(['index']);
+// Route::resource('/login', LoginController::class)->only(['index']);
+
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified'
+])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+});
