@@ -18,6 +18,8 @@ mix.js('resources/js/app.js', 'public/js')
   .browserSync({
     // proxy: "http://localhost:50080", // Docker ホストから npx mix watch する場合
     proxy: "web",  // コンテナ内から npx mix watch する場合はコンテナ名を指定する
+    port: 3000,
+    ui: { port: 3001 },
     files: ['./resources/**/*', './public/**/*', './app/**/*'],
     open: true,
     reloadOnRestart: true,
