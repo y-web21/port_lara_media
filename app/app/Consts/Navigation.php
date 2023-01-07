@@ -8,12 +8,14 @@ namespace App\Consts;
  */
 class Navigation
 {
-    const ACTION_INDEX  = 'index';
-    const HOME    = 'home';
-    const ARTICLE = 'article';
-    const ABOUT   = 'about';
-    const LOGIN   = 'login';
-    const INDEX   = 'home';
+    const ACTION_INDEX = 'index';
+    const ACTION_CREATE = 'create';
+    const HOME         = 'home';
+    const ARTICLE      = 'article';
+    const ABOUT        = 'about';
+    const LOGIN        = 'login';
+    const REGISTER     = 'register';
+    const INDEX        = 'home';
 
     /**
      * html 文字列 => Action
@@ -24,6 +26,7 @@ class Navigation
         self::ABOUT => self::ACTION_INDEX,
     ];
     const LIST_GLOBAL_LOGIN = [
-        self::LOGIN => self::ACTION_INDEX
+        self::LOGIN => self::ACTION_CREATE,
+        self::REGISTER => self::ACTION_CREATE
     ];
 }

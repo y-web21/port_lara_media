@@ -32,12 +32,12 @@
                   {{-- <li><a class="whitespace-no-wrap nav-focus mx-auto mb-2 block pt-1"
                       href="{{ route("{$nav_cotegory}.{$action}") }}">{{ ucfirst($nav_cotegory) }}</a> --}}
                   <li><a class="whitespace-no-wrap nav-focus mx-auto mb-2 block pt-1"
-                      href="{{ route('login') }}">{{ ucfirst($nav_cotegory) }}</a>
+                      href="{{ route("{$nav_cotegory}") }}">{{ ucfirst($nav_cotegory) }}</a>
                 @endforeach
               @else
                 @foreach (Navigation::LIST_GLOBAL_LOGIN_AUTH as $nav_cotegory => $action)
                   <li><a class="whitespace-no-wrap nav-focus mx-auto mb-2 block pt-1"
-                      href="{{ route("{$nav_cotegory}.{$action}") }}">{{ ucfirst($nav_cotegory) }}</a>
+                      href="{{ route("{$nav_cotegory}") }}">{{ ucfirst($nav_cotegory) }}</a>
                 @endforeach
                 <form method="POST" name="form_logout" action="{{ route('logout') }}">
                   @csrf
