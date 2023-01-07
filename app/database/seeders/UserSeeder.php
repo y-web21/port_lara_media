@@ -18,8 +18,9 @@ class UserSeeder extends Seeder
     public function run()
     {
         User::factory()->state([
-            'name' => 'root',
-            'password' => 'root'
+            'name' => 'test',
+            'email' => 'test@test',
+            'password' => \Hash::make('test'),
         ])->create();
         User::factory(10)->unsafePass()->randVerifiedDate(365)->create();
         User::factory(2)->unsafePass()->unverified()->create();
