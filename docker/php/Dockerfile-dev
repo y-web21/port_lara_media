@@ -34,7 +34,7 @@ ENV PATH $PATH:$COMPOSER_HOME/vendor/bin
 # ENV COMPOSER_ALLOW_SUPERUSER 1
 
 # https://github.com/mlocati/docker-php-extension-installer
-RUN docker-php-ext-install pdo_mysql
+RUN docker-php-ext-install pdo_mysql bcmath
 
 # install and enable xdebug
 RUN pecl install xdebug-3.1.6 && docker-php-ext-enable xdebug
