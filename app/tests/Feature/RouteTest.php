@@ -2,44 +2,60 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class RouteTest extends TestCase
 {
-    /**
-     * @return void
-     */
-    public function test_home()
+    use RefreshDatabase;
+
+    private $user;
+
+    public function setup(): void
     {
-        $response = $this->get('/');
-        $response->assertStatus(200);
+        parent::setUp();
+        $this->user = User::factory()->create();
     }
 
     /**
-     * test_basic_access
-     *
-     * @dataProvider getAccessDataProvider
-     * @param  string $page
-     * @return void
+     * @dataProvider publicPageProvider
      */
-    public function test_basic_access(string $page)
+    public function testAccessNonloginUser(string $page, int $code)
     {
         $response = $this->get($page);
-        $response->assertStatus(200);
+        $response->assertStatus($code);
+    }
+
+    public function publicPageProvider(): array
+    {
+        return [
+            ['/', 200],
+            ['/welcome', 200],
+            ['/member/home', 302],
+            ['/user/profile', 302],
+        ];
     }
 
     /**
-     * getAccessDataProvider
-     *
-     * @return array
+     * @dataProvider memberPageProvider
      */
-    public function getAccessDataProvider(): array
+    public function testAccsessAuthUser(int|string ...$data)
+    {
+        $response = $this->post('/login', [
+            'email' => $this->user->email,
+            'password' => 'password',
+        ]);
+        $response = $this->get($data[0]);
+        $response->assertStatus($data[1]);
+    }
+
+    public function memberPageProvider(): array
     {
         return [
-            ['/'],
-            ['/welcome'],
+            ['/user/profile', 200],
+            ['/member/home', 200],
         ];
     }
 }

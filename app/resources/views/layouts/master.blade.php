@@ -12,9 +12,8 @@
 </head>
 
 @php
-  $disp_header = @$disp_header ?: false;
-  $disp_gnav = @$disp_gnav ?: false;
-  $disp_footer = @$disp_footer ?: false;
+  $disp_header = $disp_header ?? false;
+  $disp_footer = $disp_footer ?? false;
 @endphp
 
 <body>
@@ -23,9 +22,17 @@
       {{-- @include('layouts.header', [ $disp_header ]) --}}
     @show
 
-    @section('global-nav')
-      @include('layouts.gnav', [ $disp_gnav ])
-    @show
+    @switch($disp_gnav ?? true)
+      @case(true)
+        @section('global-nav')
+          @include('layouts.gnav')
+        @show
+      @break
+
+      @default
+        {{-- no global navigation --}}
+    @endswitch
+
 
     <div class="container mx-auto">
 

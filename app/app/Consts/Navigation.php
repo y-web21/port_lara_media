@@ -4,7 +4,6 @@ namespace App\Consts;
 
 /**
  * Navigation Constants
- * URL変更時は見直してください。
  */
 class Navigation
 {
