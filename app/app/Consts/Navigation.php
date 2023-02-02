@@ -15,7 +15,7 @@ class Navigation
     const LOGIN         = 'login';
     const REGISTER      = 'register';
     const INDEX         = 'home';
-    const MEMBER        = 'member.home';
+    const MEMBER        = 'dashboard';
 
     /**
      * Route => Name
@@ -30,6 +30,6 @@ class Navigation
         self::REGISTER => self::REGISTER,
     ];
     const LIST_GLOBAL_LOGIN_AUTH = [
-        self::MEMBER => 'My page'
+        self::MEMBER => 'MyPage',
     ];
 }

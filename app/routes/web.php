@@ -22,7 +22,7 @@ Route::get('/welcome', function () {
 });
 Route::resource('/', HomeController::class)->only(['index']);
 Route::resource('/about', AboutController::class)->only(['index']);
-Route::resource('/article', ArticleController::class)->only(['index']);
+Route::resource('/article', ArticleController::class)->only(['index', 'create', 'edit']);
 Route::resource('/home', HomeController::class)->only(['index']);
 
 Route::middleware([
