@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use Auth;
 use Illuminate\Http\Request;
 
 class ArticleController extends Controller
@@ -37,7 +38,14 @@ class ArticleController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $new_article = new Article;
+        $new_article->title = $request->title;
+        $new_article->content = $request->content;
+        $new_article->author = Auth::user()->id;
+        $new_article->status = $request->status_id;
+        $new_article->save();
+
+        return redirect()->route('dashboard')->with('flash', '投稿が完了しました');;
     }
 
     /**

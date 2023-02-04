@@ -22,7 +22,7 @@ Route::get('/welcome', function () {
 });
 Route::resource('/', HomeController::class)->only(['index']);
 Route::resource('/about', AboutController::class)->only(['index']);
-Route::resource('/article', ArticleController::class)->only(['index', 'create', 'edit']);
+Route::resource('/article', ArticleController::class)->only(['index']);
 Route::resource('/home', HomeController::class)->only(['index']);
 
 Route::middleware([
@@ -34,5 +34,6 @@ Route::middleware([
         Route::get('/home', function () {
             return view('member.my-posts');
         })->name('dashboard');
+        Route::resource('/article', ArticleController::class)->only(['create', 'store']);
     });
 });
