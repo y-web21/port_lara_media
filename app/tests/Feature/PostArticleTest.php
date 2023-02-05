@@ -13,13 +13,12 @@ class PostArticleTest extends TestCase
 
     use RefreshDatabase;
     private $user;
-    private $article;
     private $table_name = 'articles';
 
     public function setup(): void
     {
         parent::setUp();
-        $this->article = Article::factory()->create();
+        $this->seed();
         $this->user = User::factory()->create();
         Auth::login($this->user);
     }
@@ -42,8 +41,7 @@ class PostArticleTest extends TestCase
             'status' => $postData['status_id'],
         ]);
 
-        $postedRecord = Article::find(Article::all()->count());
-
+        $postedRecord = Article::orderBy('id', 'desc')->first();
         $this->get(route('dashboard'))
             ->assertSee(__('Post has been completed.'));
         // 投稿内容がダッシュボードに反映されているか確認
@@ -60,8 +58,13 @@ class PostArticleTest extends TestCase
             [[
                 'title' => 'test_title',
                 'content' => 'test_content',
+                'status_id' => '0',
+            ]],
+            [[
+                'title' => 'test_title2',
+                'content' => 'test_content2',
                 'status_id' => '1',
-            ]]
+            ]],
         ];
     }
 }
