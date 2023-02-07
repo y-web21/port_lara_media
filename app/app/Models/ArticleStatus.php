@@ -12,4 +12,14 @@ class ArticleStatus extends Model
     # created_at, updated_at フィールドを持たない
     public $timestamps = false;
 
+    /**
+     * 記事を取得
+     *
+     * @return void
+     */
+    public function article()
+    {
+        return $this->belongsTo(Article::class, 'id', 'status_id');
+    }
+
 }

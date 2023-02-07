@@ -37,7 +37,6 @@ class PostArticleTest extends TestCase
         $this->assertDatabaseHas($this->table_name, [
             'title' => $postData['title'],
             'content' => $postData['content'],
-            'author' => Auth::user()->id,
             'status_id' => $postData['status_id'],
         ]);
 

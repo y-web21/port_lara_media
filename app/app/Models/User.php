@@ -58,8 +58,4 @@ class User extends Authenticatable
     protected $appends = [
         'profile_photo_url',
     ];
-
-    public function status() {
-        return $this->hasMany(ArticleStatus::class, 'status_id', 'status_id');
-    }
 }

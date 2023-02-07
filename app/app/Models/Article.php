@@ -48,6 +48,17 @@ class Article extends Model
      */
     public function scopePublish($query)
     {
-        return $query->where('status_id', '=', 1)->where('deleted_at', '=', null);
+        return $query->where('status_id', '=', 2)->where('deleted_at', '=', null);
+    }
+
+
+    /**
+     * 記事の状態を取得する
+     *
+     * @return void
+     */
+    public function status()
+    {
+        return $this->hasOne(ArticleStatus::class, 'id', 'status_id');
     }
 }

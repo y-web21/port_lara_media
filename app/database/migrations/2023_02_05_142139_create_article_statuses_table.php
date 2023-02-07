@@ -14,9 +14,8 @@ return new class extends Migration
     public function up()
     {
         Schema::create('article_statuses', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedSmallInteger('status_id')->unique();
-            $table->string('status_name', 100)->unique();
+            $table->unsignedTinyInteger('id')->unique();
+            $table->string('name', 100)->unique();
         });
     }
 

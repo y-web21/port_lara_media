@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('articles', function (Blueprint $table) {
-            $table->foreign('status_id')->references('status_id')->on('article_statuses');
+            $table->foreign('status_id')->references('id')->on('article_statuses');
         });
     }
     /**
