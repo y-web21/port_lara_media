@@ -20,7 +20,7 @@ class Article extends Model
         'content',
         'author',
         'updated_by',
-        'status',
+        'status_id',
     ];
 
     /**
@@ -48,6 +48,6 @@ class Article extends Model
      */
     public function scopePublish($query)
     {
-        return $query->where('status', '=', 1)->where('deleted_at', '=', null);
+        return $query->where('status_id', '=', 1)->where('deleted_at', '=', null);
     }
 }

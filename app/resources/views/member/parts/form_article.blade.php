@@ -39,7 +39,7 @@ if (isset($article)) {
 
         <div class="py-1 w-full flex flex-wrap flex-col space-y-4 md:space-y-0 justify-start md:flex-row md:items-end">
             <label class="text-xl">公開ステータス(未)</label>
-            <x-forms.radio name="status_id" :items="array('非公開', '公開')" :checked="(int)($form_value['status_id'])"/>
+            <x-forms.radio name="status_id" :items="$articleStatuses" key="status_id" value="status_name" :checked="(int)($form_value['status_id'])"/>
         </div>
 
         <hr>

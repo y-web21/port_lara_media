@@ -38,7 +38,7 @@ class PostArticleTest extends TestCase
             'title' => $postData['title'],
             'content' => $postData['content'],
             'author' => Auth::user()->id,
-            'status' => $postData['status_id'],
+            'status_id' => $postData['status_id'],
         ]);
 
         $postedRecord = Article::orderBy('id', 'desc')->first();

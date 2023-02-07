@@ -19,7 +19,7 @@ return new class extends Migration
             $table->mediumText('content');
             $table->unsignedBigInteger('author')->unsigned()->default(1);
             $table->unsignedBigInteger('updated_by')->unsigned()->nullable();
-            $table->unsignedSmallInteger('status')->unsigned()->default(0);
+            $table->unsignedSmallInteger('status_id')->unsigned()->default(0);
             $table->softDeletes();
             $table->timestamps();
             $table->foreign('author')->references('id')->on('users');

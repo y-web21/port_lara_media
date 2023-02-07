@@ -22,7 +22,7 @@ class ArticleFactory extends Factory
             'content' => fake()->realText(1000),
             'author' => random_int(1, 4),
             'updated_by' => random_int(1, 4),
-            'status' => random_int(0, 1),
+            'status_id' => random_int(0, 1),
         ];
     }
 }
