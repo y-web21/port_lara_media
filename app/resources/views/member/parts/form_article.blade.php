@@ -1,6 +1,6 @@
 @php
 $form_value = [];
-$form_value['status_id'] = 1;
+$form_value['status_id'] = 0;
 
 if (isset($article)) {
     $form_value += ['title' => $article->title];
@@ -10,14 +10,19 @@ if (isset($article)) {
 
 @endphp
 
+@push( 'script' )
+    <script src="{{ asset('/js/form.js') }}" defer></script>
+@endpush
+
 <div class="px-4 pb-8">
 
     <form class="flex flex-col space-y-8">
         @csrf
 
-        <div class="flex flex-col space-y-4 md:space-y-0 md:flex-row md:space-x-4">
+        <div class="flex flex-col space-y-4 items-end md:space-y-0 md:flex-row md:space-x-4">
 
             <div class="w-full">
+                <x-forms.input-error for="title" class="mt-2" />
                 <label class="text-xl">タイトル</label>
                 <input id="new_title" type="text" name="title"
                     value="{{ isset($form_value['title']) ? $form_value['title'] : old('title') }}"
@@ -26,20 +31,22 @@ if (isset($article)) {
 
             <div class="w-full">
                 <label class="text-xl">投稿者</label>
-                <input type="text" name="author" value="{{ Auth::user()->name }}" class="w-full form-active-blue text-opacity-10 bg-gray-200"
-                    disabled>
+                <input type="text" name="author" value="{{ Auth::user()->name }}"
+                    class="w-full form-active-blue text-opacity-10 bg-gray-200" disabled>
             </div>
         </div>
 
         <div class="w-full">
+            <x-forms.input-error for="content" class="mt-2" />
             <label class="text-xl">投稿内容</label>
             <textarea id="new_content" name="content" placeholder="内容を入力してください"
-                class="w-full form-active-blue text-opacity-10 minh-300px">{{ isset($form_value['content']) ? $form_value['content'] : old('content') }}</textarea>
+            class="w-full form-active-blue text-opacity-10 minh-300px">{{ isset($form_value['content']) ? $form_value['content'] : old('content') }}</textarea>
         </div>
 
         <div class="py-1 w-full flex flex-wrap flex-col space-y-4 md:space-y-0 justify-start md:flex-row md:items-end">
-            <label class="text-xl">公開ステータス(未)</label>
+            <label class="text-xl">公開ステータス</label>
             <x-forms.radio name="status_id" :items="$articleStatuses" key="id" value="name" :checked="(int)($form_value['status_id'])"/>
+            <x-forms.input-error for="status_id" class="ml-4" />
         </div>
 
         <hr>
