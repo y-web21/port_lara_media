@@ -103,6 +103,7 @@
                     </table>
                 @endforeach
             </div>
+            {{ $articles->links('vendor.pagination.tailwind') }}
         </div>
     </div>
 </x-app-layout>

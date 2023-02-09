@@ -22,7 +22,7 @@ class DashboardController extends Controller
             ->orderBy('articles.updated_at', 'desc')
             ->limit(999)
             ->select('articles.*', 'article_statuses.name')
-            ->get();
+            ->paginate(config('const.pagination.per_page.my_posts'), ['*'], 'page');
 
         $article_statuses = ArticleStatus::all();
 
