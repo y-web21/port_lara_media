@@ -4,14 +4,12 @@ x-app-name: &app-name
   ${APP_NAME}
 x-app-root: &app-root
   /var/www/app/
-x-db-container-name: &db-container-name
-  mysql
 x-environment: &environment
   APP_NAME: *app-name
   TZ: Asia/Tokyo
 x-db-environment: &db-environment
   DB_CONNECTION: mysql
-  DB_HOST: *db-container-name
+  DB_HOST: db
   DB_PORT: 3306
   MYSQL_DATABASE: *app-name
   MYSQL_USER: user
@@ -44,7 +42,7 @@ services:
       - app
 
   db:
-    container_name: *db-container-name
+    container_name: mysql
     build:
         context: ./mysql/
     environment:
