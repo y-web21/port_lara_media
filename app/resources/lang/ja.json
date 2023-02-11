@@ -190,5 +190,6 @@
     "You may delete any of your existing tokens if they are no longer needed.": "不要なAPIトークンを削除する。",
     "You may not delete your personal team.": "パーソナルチームを削除することはできません。",
     "You may not leave a team that you created.": "自身が作成したチームを離れることはできません。",
-    "Your email address is unverified.": "メールアドレスが未認証です。"
+    "Your email address is unverified.": "メールアドレスが未認証です。",
+    "New Post": "新規投稿"
 }

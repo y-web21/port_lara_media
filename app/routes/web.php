@@ -34,5 +34,6 @@ Route::middleware([
         Route::get('/home', function () {
             return view('member.my-posts');
         })->name('dashboard');
+        Route::resource('/article', ArticleController::class)->only(['create', 'store']);
     });
 });
