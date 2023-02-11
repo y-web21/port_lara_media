@@ -45,7 +45,7 @@ class ArticleController extends Controller
         $new_article->status = $request->status_id;
         $new_article->save();
 
-        return redirect()->route('dashboard')->with('flash', '投稿が完了しました');;
+        return redirect()->route('dashboard')->with('flash', __('Post has been completed.'));
     }
 
     /**
