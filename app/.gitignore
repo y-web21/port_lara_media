@@ -12,3 +12,8 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+
+# barryvdh/laravel-ide-helper
+_ide_helper.php
+# barryvdh/laravel-debugbar
+storage/debugbar
