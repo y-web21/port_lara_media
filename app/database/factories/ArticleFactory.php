@@ -20,9 +20,9 @@ class ArticleFactory extends Factory
         return [
             'title' => fake()->randomElement($titlePre) . '-' . $this->faker->randomNumber(4),
             'content' => fake()->realText(1000),
-            'author' => random_int(0, 4),
-            'updated_by' => random_int(0, 4),
-            'status' => random_int(0, 4),
+            'author' => random_int(1, 4),
+            'updated_by' => random_int(1, 4),
+            'status_id' => random_int(0, 1),
         ];
     }
 }

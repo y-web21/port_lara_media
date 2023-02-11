@@ -17,11 +17,13 @@ return new class extends Migration
             $table->id();
             $table->string('title')->default('no title');
             $table->mediumText('content');
-            $table->integer('author')->unsigned()->default(0);
-            $table->integer('updated_by')->unsigned()->nullable();
-            $table->integer('status')->unsigned()->default(0);
+            $table->unsignedBigInteger('author')->unsigned()->default(0);
+            $table->unsignedBigInteger('updated_by')->unsigned()->default(0);
+            $table->tinyInteger('status_id')->unsigned()->default(0);
             $table->softDeletes();
             $table->timestamps();
+            $table->foreign('author')->references('id')->on('users');
+            // $table->foreign('updated_by')->references('id')->on('users');
         });
     }
 

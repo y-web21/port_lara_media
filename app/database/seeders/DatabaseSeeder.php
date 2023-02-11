@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\App;
+use Database\Seeders\ArticleSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -14,9 +16,22 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+
+        if (App::isLocal('local')) {
+            // 外部制約キー依存テーブルを削除
+            ArticleSeeder::truncate();
+        };
+
         $this->call([
-            ArticleSeeder::class,
-            UserSeeder::class,
+            ArticleStatusesSeeder::class,
         ]);
+
+        if (App::isLocal('local')) {
+            $this->call([
+                UserSeeder::class,
+                ArticleSeeder::class,
+            ]);
+        };
+
     }
 }

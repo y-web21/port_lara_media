@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePostArticleRequest;
 use App\Models\Article;
+use App\Models\ArticleStatus;
+use App\Models\User;
 use Auth;
 use Illuminate\Http\Request;
 
@@ -15,7 +18,6 @@ class ArticleController extends Controller
      */
     public function index()
     {
-        // $articles = Article::Publish()->orderBy('created_at', 'desc')->limit(200)->get();
         $articles = Article::orderBy('created_at', 'desc')->limit(200)->get();
         return view('public.articles', compact('articles'));
     }
@@ -27,25 +29,29 @@ class ArticleController extends Controller
      */
     public function create()
     {
-        return view('member.create_article');
+        $articleStatuses = ArticleStatus::all();
+        return view('member.create_article', compact('articleStatuses'));
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\StorePostArticleRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StorePostArticleRequest $request)
     {
-        $new_article = new Article;
-        $new_article->title = $request->title;
-        $new_article->content = $request->content;
-        $new_article->author = Auth::user()->id;
-        $new_article->status = $request->status_id;
-        $new_article->save();
 
-        return redirect()->route('dashboard')->with('flash', '投稿が完了しました');;
+        $validated = $request->validated();
+
+        $newArticle = new Article;
+        $newArticle->title = $validated['title'];
+        $newArticle->content = $validated['content'];
+        $newArticle->author = Auth::user()->id;
+        $newArticle->status_id = $validated['status_id'];
+        $newArticle->save();
+
+        return redirect()->route('dashboard')->with('flash', __('Post has been completed.'));
     }
 
     /**
