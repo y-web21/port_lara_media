@@ -19,7 +19,6 @@ class ArticleStatus extends Model
      */
     public function article()
     {
-        return $this->belongsTo(Article::class, 'id', 'status_id');
+        return $this->hasMany(Article::class, 'status_id');
     }
-
 }

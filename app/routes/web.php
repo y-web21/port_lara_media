@@ -6,6 +6,7 @@ use App\Http\Controllers\Dashboard;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
+use App\Http\Middleware\RedirectPagination;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -33,7 +34,17 @@ Route::middleware([
     'verified'
 ])->group(function () {
     Route::prefix('member')->group(function () {
-        Route::get('/home', [ DashboardController::class, 'index'])->name('dashboard');
         Route::resource('/article', ArticleController::class)->only(['create', 'store', 'edit', 'destroy']);
+    });
+});
+
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+    RedirectPagination::class
+])->group(function () {
+    Route::prefix('member')->group(function () {
+        Route::get('/home', [ DashboardController::class, 'index'])->name('dashboard');
     });
 });

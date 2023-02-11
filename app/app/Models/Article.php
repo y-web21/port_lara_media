@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class Article extends Model
 {
@@ -41,6 +44,16 @@ class Article extends Model
     ];
 
     /**
+     * 記事の状態名を取得する
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function status()
+    {
+        return $this->belongsTo(ArticleStatus::class, 'status_id');
+    }
+
+    /**
      * 公開状態にあるレコードに絞り込むローカルスコープ
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
@@ -51,14 +64,27 @@ class Article extends Model
         return $query->where('status_id', '=', 2)->where('deleted_at', '=', null);
     }
 
+    /**
+     * 指定したユーザーの記事を返すスコープ
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param integer|string|null $type
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeAuthor($query, int|string|null $type = null)
+    {
+        $id = $type ?? Auth::user()->id;
+        return $query->where('author', $id);
+    }
 
     /**
-     * 記事の状態を取得する
-     *
-     * @return void
-     */
-    public function status()
+     * 表示用のログインユーザの投稿一覧を取得する
+      */
+    public function getMyPosts(int $per_page = 10) : LengthAwarePaginator
     {
-        return $this->hasOne(ArticleStatus::class, 'id', 'status_id');
+        return $this->author()
+            ->with('status')
+            ->orderBy('articles.updated_at', 'desc')
+            ->paginate($per_page);
     }
 }

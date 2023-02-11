@@ -25,7 +25,7 @@
                             <td class="w-2/15 border border-blue-800 px-4 py-2">{{ $article->title }}</td>
                             <td class="w-6/15 border border-blue-800 px-4 py-2">
                                 {{ Helper::strlimit($article->content, 100) }}</td>
-                            <td class="w-1/15 border border-blue-800 px-4 py-2 text-center">{{ $article->name }}</td>
+                            <td class="w-1/15 border border-blue-800 px-4 py-2 text-center">{{ $article->status->name }}</td>
                             <td class="w-2/15 border border-blue-800 px-4 py-2 text-center">{{ $article->updated_at }}
                             </td>
                             <td class="w-2/15 border border-blue-800 px-4 py-2 text-center">{{ $article->created_at }}
@@ -67,8 +67,7 @@
                             </tr>
                             <tr>
                                 <th class="x-4 w-1/4 border-b border-blue-200 bg-blue-900 py-2 text-gray-200">状態</th>
-                                <td class="w-3/4 border border-blue-800 px-4 py-2 text-center">{{ $article->name }}
-                                </td>
+                                <td class="w-3/4 border border-blue-800 px-4 py-2 text-center">{{ $article->status->name }}</td>
                             </tr>
                             <tr>
                                 <th class="x-4 w-1/4 border-b border-blue-200 bg-blue-900 py-2 text-gray-200">更新日</th>
