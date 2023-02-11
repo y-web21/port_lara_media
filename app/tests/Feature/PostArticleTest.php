@@ -10,7 +10,6 @@ use Tests\TestCase;
 
 class PostArticleTest extends TestCase
 {
-
     use RefreshDatabase;
     private $user;
     private $table_name = 'articles';
@@ -37,8 +36,7 @@ class PostArticleTest extends TestCase
         $this->assertDatabaseHas($this->table_name, [
             'title' => $postData['title'],
             'content' => $postData['content'],
-            'author' => Auth::user()->id,
-            'status' => $postData['status_id'],
+            'status_id' => $postData['status_id'],
         ]);
 
         $postedRecord = Article::orderBy('id', 'desc')->first();
@@ -65,6 +63,61 @@ class PostArticleTest extends TestCase
                 'content' => 'test_content2',
                 'status_id' => '1',
             ]],
+        ];
+    }
+
+    /**
+     * @test
+     * @dataProvider articleValidateFaildDataProvider
+     * @param array<string> $err
+     * @param array{
+     *   title: string,
+     *   content: string,
+     *   status_id: string|int
+     * } $postData
+     * @return void
+     */
+    public function 記事投稿がvalidationによって失敗する(array $err, array $postData)
+    {
+        $this->get(route('article.create'));
+        $this->post(route('article.store'), $postData)
+            ->assertRedirect(route('article.create'))
+            ->assertSessionHasErrors($err);
+
+        $this->assertDatabaseMissing($this->table_name, [
+            'title' => $postData['title'],
+            'content' => $postData['content'],
+            'status_id' => $postData['status_id'],
+        ]);
+    }
+
+    public function articleValidateFaildDataProvider(): array
+    {
+        return [
+            [
+                ['title'],   // エラーが発生する対象を指定
+                [
+                    'title' => sprintf("%0101s", 0),
+                    'content' => sprintf("%05000s", 0),
+                    'status_id' => '0',
+                ]
+            ],
+            [
+                ['content'],
+                [
+                    'title' => sprintf("%0100s", 0),
+                    'content' => sprintf("%05001s", 0),
+                    'status_id' => '1',
+                ]
+            ],
+            [
+                ['status_id'],
+                [
+                    'title' => sprintf("%0100s", 0),
+                    'content' => sprintf("%05000s", 0),
+                    'status_id' => '2',
+                ]
+            ],
         ];
     }
 }

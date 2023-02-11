@@ -19,7 +19,7 @@ class ArticleStatusesSeeder extends Seeder
         $table = DB::table('article_statuses');
         $statuses = ['非公開', '公開'];
         foreach($statuses as $key => $status){
-            $table->insert(['status_id' => $key ,'status_name' => $status]);
+            $table->insert(['id' => $key ,'name' => $status]);
         }
     }
 }

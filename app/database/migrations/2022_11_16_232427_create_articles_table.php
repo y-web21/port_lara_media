@@ -17,9 +17,9 @@ return new class extends Migration
             $table->id();
             $table->string('title')->default('no title');
             $table->mediumText('content');
-            $table->unsignedBigInteger('author')->unsigned()->default(1);
-            $table->unsignedBigInteger('updated_by')->unsigned()->nullable();
-            $table->unsignedSmallInteger('status')->unsigned()->default(0);
+            $table->unsignedBigInteger('author')->unsigned()->default(0);
+            $table->unsignedBigInteger('updated_by')->unsigned()->default(0);
+            $table->tinyInteger('status_id')->unsigned()->default(0);
             $table->softDeletes();
             $table->timestamps();
             $table->foreign('author')->references('id')->on('users');
