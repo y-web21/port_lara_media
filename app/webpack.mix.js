@@ -15,7 +15,6 @@ mix.js('resources/js/app.js', 'public/js')
   .postCss('resources/css/app.css', 'public/css', [
     require('tailwindcss'),
   ])
-  .copyDirectory('resources/js/components/**', 'public/js')
   .browserSync({
     // proxy: "http://localhost:50080", // Docker ホストから npx mix watch する場合
     proxy: "web",  // コンテナ内から npx mix watch する場合はコンテナ名を指定する

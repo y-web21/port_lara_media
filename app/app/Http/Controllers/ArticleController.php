@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StorePostArticleRequest;
 use App\Models\Article;
 use App\Models\ArticleStatus;
 use App\Models\User;
@@ -36,19 +35,16 @@ class ArticleController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\StorePostArticleRequest  $request
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(StorePostArticleRequest $request)
+    public function store(Request $request)
     {
-
-        $validated = $request->validated();
-
         $newArticle = new Article;
-        $newArticle->title = $validated['title'];
-        $newArticle->content = $validated['content'];
+        $newArticle->title = $request->title;
+        $newArticle->content = $request->content;
         $newArticle->author = Auth::user()->id;
-        $newArticle->status_id = $validated['status_id'];
+        $newArticle->status_id = $request->status_id;
         $newArticle->save();
 
         return redirect()->route('dashboard')->with('flash', __('Post has been completed.'));
