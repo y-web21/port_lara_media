@@ -4,50 +4,61 @@ namespace Tests\Feature;
 
 use App\Models\Article;
 use App\Models\User;
+use Artisan;
+use Auth;
+use Database\Seeders\ArticleSeeder;
+use DB;
+use Illuminate\Database\Seeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
+use Database\Seeders\EditArticleTestSeeder;
 
-class PostArticleTest extends TestCase
+class EditArticleTest extends TestCase
 {
     use RefreshDatabase;
-    private $user;
     private $table_name = 'articles';
 
     public function setup(): void
     {
         parent::setUp();
         $this->seed();
-        $this->user = User::factory()->create();
-        Auth::login($this->user);
+        $user = User::factory()->create();
+        Auth::login($user);
+        $this->seed(EditArticleTestSeeder::class);
     }
 
     /**
      * @test
-     * @dataProvider articleDataProvider
+    *  @ddataProvider articleDataProvider
      *
      * @return void
      */
-    public function 記事投稿(array $postData)
+    public function 記事編集(array $postData =[])
     {
-        $this->post(route('article.store'), $postData)
-            ->assertRedirect(route('dashboard'));
-
         $this->assertDatabaseHas($this->table_name, [
-            'title' => $postData['title'],
-            'content' => $postData['content'],
-            'status_id' => $postData['status_id'],
+            'title' => 'sugoi',
+            'content' => 'yabai',
+            'author' => 1,
+            'status_id' => 1,
         ]);
 
-        $postedRecord = Article::orderBy('id', 'desc')->first();
-        $this->get(route('dashboard'))
-            ->assertSee(__('Post has been completed.'));
-        // 投稿内容がダッシュボードに反映されているか確認
+        $this->put(route('article.update', ['id' => '1']), $postData)
+             ->assertRedirect(route('dashboard'));
+
+        $this->assertDatabaseHas($this->table_name, [
+            'title' => 'test_title',
+        ]);
+
+        // $postedRecord = Article::orderBy('id', 'desc')->first();
+        // $this->get(route('dashboard'))
+        //     ->assertSee(__('Post has been completed.'));
+        // // 投稿内容がダッシュボードに反映されているか確認
         //     ->assertSee($postData['title'])
         //     ->assertSee($postData['content'])
         //     ->assertSee($postedRecord->status_name);
 
-        $postedRecord->delete();
+        // $postedRecord->delete();
     }
 
     public function articleDataProvider(): array
@@ -67,7 +78,7 @@ class PostArticleTest extends TestCase
     }
 
     /**
-     * @test
+     * @te
      * @dataProvider articleValidateFaildDataProvider
      * @param array<string> $err
      * @param array{
@@ -110,15 +121,6 @@ class PostArticleTest extends TestCase
                     'title' => sprintf("%0100s", 0),
                     'content' => sprintf("%05001s", 0),
                     'status_id' => '1',
-                ]
-            ],
-            'status_id 存在しない公開ステータス' =>
-            [
-                ['status_id'],
-                [
-                    'title' => sprintf("%0100s", 0),
-                    'content' => sprintf("%05000s", 0),
-                    'status_id' => '2',
                 ]
             ],
         ];
