@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
     {
 
         if (App::isLocal('local')) {
-            // 外部制約キー依存テーブルを削除
+            // 外部制約キー依存テーブルを先に削除
             ArticleSeeder::truncate();
         };
 

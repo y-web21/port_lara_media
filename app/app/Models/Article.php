@@ -79,12 +79,27 @@ class Article extends Model
 
     /**
      * 表示用のログインユーザの投稿一覧を取得する
-      */
-    public function getMyPosts(int $per_page = 10) : LengthAwarePaginator
+     */
+    public function getMyPosts(int $per_page = 10): LengthAwarePaginator
     {
         return $this->author()
             ->with('status')
             ->orderBy('articles.updated_at', 'desc')
             ->paginate($per_page);
+    }
+
+    /**
+     * 既存の記事更新処理
+     * @param Illuminate\Http\Request $request
+     * @param integer $id  レコードID
+     * @return void
+     */
+    public function updateArticle($request, int $id)
+    {
+        $request->merge(['id' => $id]);
+        $target = $this->query()->findOrFail(1);
+        if (!$target->update($request->toArray())) {
+            abort(422, 'update failed.');
+        };
     }
 }

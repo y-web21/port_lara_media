@@ -5,12 +5,19 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePostArticleRequest;
 use App\Models\Article;
 use App\Models\ArticleStatus;
-use App\Models\User;
 use Auth;
-use Illuminate\Http\Request;
+
 
 class ArticleController extends Controller
 {
+
+    private $article;
+
+    public function __construct(Article $article)
+    {
+        $this->article = $article;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -36,7 +43,7 @@ class ArticleController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\StorePostArticleRequest  $request
+     * @param  StorePostArticleRequest  $request
      * @return \Illuminate\Http\Response
      */
     public function store(StorePostArticleRequest $request)
@@ -51,7 +58,8 @@ class ArticleController extends Controller
         $newArticle->status_id = $validated['status_id'];
         $newArticle->save();
 
-        return redirect()->route('dashboard')->with('flash', __('Post has been completed.'));
+        return redirect()->route('dashboard')
+            ->with('flash', __('Post has been completed.'));
     }
 
     /**
@@ -79,13 +87,15 @@ class ArticleController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param StorePostArticleRequest $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Respon
      */
-    public function update(Request $request, $id)
+    public function update(StorePostArticleRequest $request, $id)
     {
-        //
+        $this->article->updateArticle($request, $id);
+        return redirect()->route('dashboard')
+            ->with('flash', __('Update has been completed.'));
     }
 
     /**

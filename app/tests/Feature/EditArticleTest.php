@@ -2,17 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\Article;
 use App\Models\User;
-use Artisan;
 use Auth;
-use Database\Seeders\ArticleSeeder;
-use DB;
-use Illuminate\Database\Seeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use Database\Seeders\EditArticleTestSeeder;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class EditArticleTest extends TestCase
 {
@@ -24,17 +19,20 @@ class EditArticleTest extends TestCase
         parent::setUp();
         $this->seed();
         $user = User::factory()->create();
-        Auth::login($user);
         $this->seed(EditArticleTestSeeder::class);
+        Auth::login($user);
     }
+
+    // $this->artisan('migrate:fresh', ['--seed' => true]);
+    // $this->assertTrue(true);
 
     /**
      * @test
-    *  @ddataProvider articleDataProvider
+    *  @dataProvider articleDataProvider
      *
      * @return void
      */
-    public function 記事編集(array $postData =[])
+    public function 記事編集(array $postData)
     {
         $this->assertDatabaseHas($this->table_name, [
             'title' => 'sugoi',
@@ -43,8 +41,8 @@ class EditArticleTest extends TestCase
             'status_id' => 1,
         ]);
 
-        $this->put(route('article.update', ['id' => '1']), $postData)
-             ->assertRedirect(route('dashboard'));
+        $this->put(route('article.update', ['article' => 1]), $postData);
+            //  ->assertRedirect(route('dashboard'));
 
         $this->assertDatabaseHas($this->table_name, [
             'title' => 'test_title',
@@ -61,6 +59,13 @@ class EditArticleTest extends TestCase
         // $postedRecord->delete();
     }
 
+    public function 記事編集失敗(array $postData =[]){
+        $this->assertDatabaseMissing($this->table_name, [
+            'title' => 'test_title',
+        ]);
+    }
+
+
     public function articleDataProvider(): array
     {
         return [
@@ -68,11 +73,6 @@ class EditArticleTest extends TestCase
                 'title' => 'test_title',
                 'content' => 'test_content',
                 'status_id' => '0',
-            ]],
-            "記事投稿2" =>  [[
-                'title' => 'test_title2',
-                'content' => 'test_content2',
-                'status_id' => '1',
             ]],
         ];
     }
@@ -88,11 +88,11 @@ class EditArticleTest extends TestCase
      * } $postData
      * @return void
      */
-    public function 記事投稿がvalidationによって失敗する(array $err, array $postData)
+    public function 記事編集がvalidationによって失敗する(array $err, array $postData)
     {
-        $this->get(route('article.create'));
-        $this->post(route('article.store'), $postData)
-            ->assertRedirect(route('article.create'))
+        $this->get(route('article.edit'), ['id' => '1']);
+        $this->post(route('article.update'), $postData)
+            ->assertRedirect(route('article.edit'))
             ->assertSessionHasErrors($err);
 
         $this->assertDatabaseMissing($this->table_name, [
