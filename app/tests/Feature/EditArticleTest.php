@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use Auth;
+use Mockery;
 use Tests\TestCase;
+use App\Models\User;
+use App\Models\Article;
 use Database\Seeders\EditArticleTestSeeder;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class EditArticleTest extends TestCase
 {
@@ -18,22 +20,19 @@ class EditArticleTest extends TestCase
     {
         parent::setUp();
         $this->seed();
+        Article::query()->forceDelete();
         $user = User::factory()->create();
         $this->seed(EditArticleTestSeeder::class);
         Auth::login($user);
     }
 
-    // $this->artisan('migrate:fresh', ['--seed' => true]);
-    // $this->assertTrue(true);
-
     /**
      * @test
-    *  @dataProvider articleDataProvider
-     *
-     * @return void
+     * @dataProvider articleDataProvider
      */
-    public function 記事編集(array $postData)
+    public function 記事編集成功(array $postData): void
     {
+
         $this->assertDatabaseHas($this->table_name, [
             'title' => 'sugoi',
             'content' => 'yabai',
@@ -41,11 +40,13 @@ class EditArticleTest extends TestCase
             'status_id' => 1,
         ]);
 
-        $this->put(route('article.update', ['article' => 1]), $postData);
-            //  ->assertRedirect(route('dashboard'));
+        $this->put(route('article.update', ['article' => 1]), $postData)
+            ->assertRedirect(route('dashboard'));
 
         $this->assertDatabaseHas($this->table_name, [
-            'title' => 'test_title',
+            'title' => $postData['title'],
+            'content' => $postData['content'],
+            'status_id' => $postData['status_id'],
         ]);
 
         // $postedRecord = Article::orderBy('id', 'desc')->first();
@@ -55,21 +56,42 @@ class EditArticleTest extends TestCase
         //     ->assertSee($postData['title'])
         //     ->assertSee($postData['content'])
         //     ->assertSee($postedRecord->status_name);
-
-        // $postedRecord->delete();
     }
 
-    public function 記事編集失敗(array $postData =[]){
+    /**
+     * @test
+     * @dataProvider articleDataProvider
+     */
+    public function 記事編集失敗_notExistsId(array $postData): void
+    {
+        $this->put(route('article.update', ['article' => 0]), $postData)
+            ->assertStatus(404);
         $this->assertDatabaseMissing($this->table_name, [
-            'title' => 'test_title',
+            'title' => $postData['title'],
+            'content' => $postData['content'],
+            'status_id' => $postData['status_id'],
         ]);
     }
 
+    /**
+     * @test
+     * @dataProvider articleDataProvider
+     */
+    public function 記事編集失敗_DB要因の失敗_422(array $postData): void
+    {
+        $mock = Mockery::mock(Article::class)->makePartial();
+        $mock->shouldReceive('updateArticle')
+            ->once()
+            ->andReturn(false);
+        $this->app->instance(Article::class, $mock);
+
+        $this->put(route('article.update', ['article' => 1]), $postData)->assertStatus(422);
+    }
 
     public function articleDataProvider(): array
     {
         return [
-            "記事投稿" =>  [[
+            "正常データ" =>  [[
                 'title' => 'test_title',
                 'content' => 'test_content',
                 'status_id' => '0',
@@ -78,7 +100,7 @@ class EditArticleTest extends TestCase
     }
 
     /**
-     * @te
+     * @test
      * @dataProvider articleValidateFaildDataProvider
      * @param array<string> $err
      * @param array{
@@ -86,9 +108,8 @@ class EditArticleTest extends TestCase
      *   content: string,
      *   status_id: string|int
      * } $postData
-     * @return void
      */
-    public function 記事編集がvalidationによって失敗する(array $err, array $postData)
+    public function 記事編集がvalidationによって失敗する(array $err, array $postData): void
     {
         $this->get(route('article.edit'), ['id' => '1']);
         $this->post(route('article.update'), $postData)
@@ -102,6 +123,10 @@ class EditArticleTest extends TestCase
         ]);
     }
 
+    /**
+     * EDITでは、共通の validate のパターンの発火のみを確認してパターンはPost側に委ねる
+     * @return array
+     */
     public function articleValidateFaildDataProvider(): array
     {
         return [
@@ -112,15 +137,6 @@ class EditArticleTest extends TestCase
                     'title' => sprintf("%0101s", 0),
                     'content' => sprintf("%05000s", 0),
                     'status_id' => '0',
-                ]
-            ],
-            'content 文字数オーバー' =>
-            [
-                ['content'],
-                [
-                    'title' => sprintf("%0100s", 0),
-                    'content' => sprintf("%05001s", 0),
-                    'status_id' => '1',
                 ]
             ],
         ];

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use DB;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -19,10 +20,10 @@ class EditArticleTestSeeder extends Seeder
             [
                 'title' => 'sugoi',
                 'content' => 'yabai',
-                'author' => 1,
+                'author' => User::first()->id,
                 'status_id' => 1,
-                // 'created_at' => now(),
-                // 'updated_at' => now()
+                'created_at' => now(),
+                'updated_at' => now()
             ]
         ];
         DB::table('articles')->insert($data);

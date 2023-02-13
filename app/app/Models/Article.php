@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\DB;
 
 class Article extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     /**
      * 更新可能フィールドの定義
@@ -92,14 +93,11 @@ class Article extends Model
      * 既存の記事更新処理
      * @param Illuminate\Http\Request $request
      * @param integer $id  レコードID
-     * @return void
+     * @return bool isSuccess
      */
-    public function updateArticle($request, int $id)
+    public function updateArticle($request, int $id): bool
     {
-        $request->merge(['id' => $id]);
-        $target = $this->query()->findOrFail(1);
-        if (!$target->update($request->toArray())) {
-            abort(422, 'update failed.');
-        };
+        $target = $this->query()->findOrFail($id);
+        return $target->update($request->toArray());
     }
 }

@@ -121,6 +121,15 @@ class PostArticleTest extends TestCase
                     'status_id' => '2',
                 ]
             ],
+            'text missing' =>
+            [
+                ['title', 'content'],
+                [
+                    'title' => '',
+                    'content' => '',
+                    'status_id' => '1',
+                ]
+            ],
         ];
     }
 }

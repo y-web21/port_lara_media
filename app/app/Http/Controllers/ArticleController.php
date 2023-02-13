@@ -93,7 +93,9 @@ class ArticleController extends Controller
      */
     public function update(StorePostArticleRequest $request, $id)
     {
-        $this->article->updateArticle($request, $id);
+        if (!$this->article->updateArticle($request, $id)) {
+            abort(422, 'update failed.');
+        };
         return redirect()->route('dashboard')
             ->with('flash', __('Update has been completed.'));
     }
