@@ -4,18 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePostArticleRequest;
 use App\Models\Article;
-use App\Models\ArticleStatus;
-use Auth;
+use App\Models\ArticleStatus;use Auth;
+use Illuminate\View\ComponentAttributeBag;
 
 
 class ArticleController extends Controller
 {
 
     private $article;
+    private $articleStatus;
 
-    public function __construct(Article $article)
+    public function __construct(Article $article, ArticleStatus $articleStatus)
     {
         $this->article = $article;
+        $this->articleStatus = $articleStatus;
     }
 
     /**
@@ -81,9 +83,10 @@ class ArticleController extends Controller
      */
     public function edit($id)
     {
-        //
+        $articleStatuses = ArticleStatus::all();
+        $article = Article::find($id);
+        return view('member.edit_article', compact('id', 'article', 'articleStatuses'));
     }
-
     /**
      * Update the specified resource in storage.
      *

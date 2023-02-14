@@ -8,7 +8,7 @@
   <div class="my-12">
     <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
       <div class="overflow-hidden bg-white shadow-2xl sm:rounded-lg">
-        @include('member.parts.form_article')
+        @include('member.sub.form_article')
       </div>
     </div>
   </div>

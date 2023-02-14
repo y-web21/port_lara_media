@@ -29,7 +29,7 @@
     @apply uppercase px-3 py-1.5 rounded border border-green-600 text-green-600 max-w-max shadow-sm hover:shadow-lg;
 }
 .btn-http-error{
-    @apply uppercase px-4 py-2 rounded border border-gray-500 text-gray-500 max-w-max shadow-sm hover:opacity-70 hover:opacity-70 focus:outline-white;
+    @apply uppercase px-4 py-2 rounded border border-gray-500 text-gray-500 max-w-max shadow-sm hover:opacity-70 focus:outline-white;
 }
 .form-active-blue{
     @apply border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm;
