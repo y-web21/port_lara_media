@@ -84,9 +84,11 @@ class ArticleController extends Controller
     public function edit($id)
     {
         $articleStatuses = ArticleStatus::all();
-        $article = Article::find($id);
+        // author scope で自身の記事以外への要求は 404 とする
+        $article = Article::query()->author()->findOrFail($id);
         return view('member.edit_article', compact('id', 'article', 'articleStatuses'));
     }
+
     /**
      * Update the specified resource in storage.
      *

@@ -91,7 +91,7 @@ class Article extends Model
 
     /**
      * 既存の記事更新処理
-     * @todo 更新可能フィールドが form html の改ざんによって送られてきた場合に問題がないか検討する
+     * @todo フォームで許可していない更新可能フィールドが form html の改ざんによって送られてきた場合に問題がないか検討する
      * @param Illuminate\Http\Request $request
      * @param integer $id  レコードID
      * @return bool isSuccess

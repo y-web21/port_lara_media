@@ -25,4 +25,17 @@ class ArticleFactory extends Factory
             'status_id' => random_int(0, 1),
         ];
     }
+
+    /**
+     * specify author
+     *
+     * @return self
+     */
+    public function author(int $id): self
+    {
+        return $this->state([
+            'author' => $id,
+        ]);
+    }
+
 }

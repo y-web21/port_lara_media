@@ -73,7 +73,7 @@
 
                 <div class="flex items-center justify-center">
                     @if ($action === 'edit')
-                        @method('patch')
+                        @method('put')
                         <x-forms.button id="btn_edit" class="btn-green"
                             formaction="{{ route('article.update', ['article' => $id]) }}">
                             {{ __('Edit') }}
