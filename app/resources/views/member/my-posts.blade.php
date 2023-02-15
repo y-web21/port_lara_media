@@ -33,8 +33,10 @@
                             <td class="w-2/15 border border-blue-800 text-center">
                                 <div class="flex items-center justify-around">
                                     <div>
-                                        <button type="button" class="btn-green-sm"
-                                            onclick="location.href='{{ route('article.edit', ['article' => $article->id]) }}'">編集</button>
+                                        <x-button class="btn-green-sm"
+                                            onclick="location.href='{{ route('article.edit', ['article' => $article->id]) }}'">
+                                            {{ __('Edit') }}
+                                        </x-button>
                                     </div>
                                     <form action={{ route('article.destroy', ['article' => $article->id]) }}
                                         method="post" class="m-0">
@@ -86,8 +88,9 @@
                                 <td class="w-3/4 border border-blue-800 text-center">
                                     <div class="flex items-center justify-around">
                                         <div>
-                                            <button type="button" class="btn-green-sm"
-                                                onclick="location.href='{{ route('article.edit', ['article' => $article->id]) }}'">編集</button>
+                                            <x-button class="btn-green-sm"
+                                                onclick="location.href='{{ route('article.edit', ['article' => $article->id]) }}'"
+                                                >{{ __('Edit') }}</x-button>
                                         </div>
                                         <form action={{ route('article.destroy', ['article' => $article->id]) }}
                                             method="post" class="m-0">

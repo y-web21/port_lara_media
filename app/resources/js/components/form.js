@@ -7,11 +7,21 @@
     const formInputs = document.querySelectorAll('form input[name], form textarea[name]')
     /** @type {boolean} */
     let hasChange = false;
+
+    // なにかしらの変更があったことを記憶する
     for (const el of formInputs) {
       el.addEventListener('change', () => hasChange = true)
     }
-    window.addEventListener('beforeunload', e => {
-      if (hasChange) e.returnValue = ''
+
+    // 特定のボタンは離脱警告対象から除外する
+    const exceptIds = ['btn_edit', 'btn_edit']
+    for (const el of exceptIds) {
+      document.getElementById(el).addEventListener('click', () => hasChange = false)
+    }
+
+    // 離脱時に確認する
+    window.addEventListener('beforeunload', ev => {
+      if (hasChange) ev.returnValue = ''
     }, false)
   }
 

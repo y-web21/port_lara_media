@@ -53,12 +53,12 @@ class PostArticleTest extends TestCase
     public function articleDataProvider(): array
     {
         return [
-            [[
+            "記事投稿" =>  [[
                 'title' => 'test_title',
                 'content' => 'test_content',
                 'status_id' => '0',
             ]],
-            [[
+            "記事投稿2" =>  [[
                 'title' => 'test_title2',
                 'content' => 'test_content2',
                 'status_id' => '1',
@@ -94,14 +94,16 @@ class PostArticleTest extends TestCase
     public function articleValidateFaildDataProvider(): array
     {
         return [
+            'title 文字数オーバー' =>
             [
-                ['title'],   // エラーが発生する対象を指定
+                ['title'],
                 [
                     'title' => sprintf("%0101s", 0),
                     'content' => sprintf("%05000s", 0),
                     'status_id' => '0',
                 ]
             ],
+            'content 文字数オーバー' =>
             [
                 ['content'],
                 [
@@ -110,12 +112,22 @@ class PostArticleTest extends TestCase
                     'status_id' => '1',
                 ]
             ],
+            'status_id 存在しない公開ステータス' =>
             [
                 ['status_id'],
                 [
                     'title' => sprintf("%0100s", 0),
                     'content' => sprintf("%05000s", 0),
                     'status_id' => '2',
+                ]
+            ],
+            'text missing' =>
+            [
+                ['title', 'content'],
+                [
+                    'title' => '',
+                    'content' => '',
+                    'status_id' => '1',
                 ]
             ],
         ];

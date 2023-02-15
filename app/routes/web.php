@@ -34,7 +34,7 @@ Route::middleware([
     'verified'
 ])->group(function () {
     Route::prefix('member')->group(function () {
-        Route::resource('/article', ArticleController::class)->only(['create', 'store', 'edit', 'destroy']);
+        Route::resource('/article', ArticleController::class)->only(['create', 'store', 'edit','update', 'destroy']);
     });
 });
 

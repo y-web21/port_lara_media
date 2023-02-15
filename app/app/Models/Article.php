@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\DB;
 
 class Article extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     /**
      * 更新可能フィールドの定義
@@ -79,12 +80,25 @@ class Article extends Model
 
     /**
      * 表示用のログインユーザの投稿一覧を取得する
-      */
-    public function getMyPosts(int $per_page = 10) : LengthAwarePaginator
+     */
+    public function getMyPosts(int $per_page = 10): LengthAwarePaginator
     {
         return $this->author()
             ->with('status')
             ->orderBy('articles.updated_at', 'desc')
             ->paginate($per_page);
+    }
+
+    /**
+     * 既存の記事更新処理
+     * @todo フォームで許可していない更新可能フィールドが form html の改ざんによって送られてきた場合に問題がないか検討する
+     * @param Illuminate\Http\Request $request
+     * @param integer $id  レコードID
+     * @return bool isSuccess
+     */
+    public function updateArticle($request, int $id): bool
+    {
+        $target = $this->query()->findOrFail($id);
+        return $target->update($request->toArray());
     }
 }

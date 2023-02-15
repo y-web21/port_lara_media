@@ -4,13 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePostArticleRequest;
 use App\Models\Article;
-use App\Models\ArticleStatus;
-use App\Models\User;
-use Auth;
-use Illuminate\Http\Request;
+use App\Models\ArticleStatus;use Auth;
+use Illuminate\View\ComponentAttributeBag;
+
 
 class ArticleController extends Controller
 {
+
+    private $article;
+    private $articleStatus;
+
+    public function __construct(Article $article, ArticleStatus $articleStatus)
+    {
+        $this->article = $article;
+        $this->articleStatus = $articleStatus;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -36,7 +45,7 @@ class ArticleController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\StorePostArticleRequest  $request
+     * @param  StorePostArticleRequest  $request
      * @return \Illuminate\Http\Response
      */
     public function store(StorePostArticleRequest $request)
@@ -51,7 +60,8 @@ class ArticleController extends Controller
         $newArticle->status_id = $validated['status_id'];
         $newArticle->save();
 
-        return redirect()->route('dashboard')->with('flash', __('Post has been completed.'));
+        return redirect()->route('dashboard')
+            ->with('flash', __('Post has been completed.'));
     }
 
     /**
@@ -73,19 +83,26 @@ class ArticleController extends Controller
      */
     public function edit($id)
     {
-        //
+        $articleStatuses = ArticleStatus::all();
+        // author scope で自身の記事以外への要求は 404 とする
+        $article = Article::query()->author()->findOrFail($id);
+        return view('member.edit_article', compact('id', 'article', 'articleStatuses'));
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param StorePostArticleRequest $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Respon
      */
-    public function update(Request $request, $id)
+    public function update(StorePostArticleRequest $request, $id)
     {
-        //
+        if (!$this->article->updateArticle($request, $id)) {
+            abort(422, 'update failed.');
+        };
+        return redirect()->route('dashboard')
+            ->with('flash', __('Update has been completed.'));
     }
 
     /**
