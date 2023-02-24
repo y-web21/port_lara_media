@@ -98,7 +98,18 @@ class Article extends Model
      */
     public function updateArticle($request, int $id): bool
     {
-        $target = $this->query()->findOrFail($id);
+        $target = $this->query()->author()->findOrFail($id);
         return $target->update($request->toArray());
+    }
+
+    /**
+     * 記事の(ソフト)デリート
+     * @param integer $id  レコードID
+     * @return bool isSuccess
+     */
+    public function deleteAricle(int $id): bool
+    {
+        $target = $this->query()->author()->findOrFail($id);
+        return $target->delete();
     }
 }

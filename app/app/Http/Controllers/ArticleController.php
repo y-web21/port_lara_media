@@ -102,7 +102,7 @@ class ArticleController extends Controller
             abort(422, 'update failed.');
         };
         return redirect()->route('dashboard')
-            ->with('flash', __('Update has been completed.'));
+        ->with('flash', __('Update has been completed.'));
     }
 
     /**
@@ -113,6 +113,10 @@ class ArticleController extends Controller
      */
     public function destroy($id)
     {
-        //
+        if (!$this->article->deleteAricle($id)) {
+            abort(422, 'deletion failed.');
+        };
+        return redirect()->route('dashboard')
+            ->with('flash', __('Deletion has been completed.'));
     }
 }
