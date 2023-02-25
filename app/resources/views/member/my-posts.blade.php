@@ -25,7 +25,8 @@
                             <td class="w-2/15 border border-blue-800 px-4 py-2">{{ $article->title }}</td>
                             <td class="w-6/15 border border-blue-800 px-4 py-2">
                                 {{ Helper::strlimit($article->content, 100) }}</td>
-                            <td class="w-1/15 border border-blue-800 px-4 py-2 text-center">{{ $article->status->name }}</td>
+                            <td class="w-1/15 border border-blue-800 px-4 py-2 text-center">{{ $article->status->name }}
+                            </td>
                             <td class="w-2/15 border border-blue-800 px-4 py-2 text-center">{{ $article->updated_at }}
                             </td>
                             <td class="w-2/15 border border-blue-800 px-4 py-2 text-center">{{ $article->created_at }}
@@ -42,7 +43,10 @@
                                         method="post" class="m-0">
                                         @csrf
                                         @method('delete')
-                                        <button type="submit" class="btn-red-sm">削除</button>
+                                        <x-forms.button class="btn-red-sm"
+                                            onclick="if (!window.confirm('本当に削除しますか？')) return false">
+                                            {{ __('Delete') }}
+                                        </x-forms.button>
                                     </form>
                                 </div>
                             </td>
@@ -69,7 +73,8 @@
                             </tr>
                             <tr>
                                 <th class="x-4 w-1/4 border-b border-blue-200 bg-blue-900 py-2 text-gray-200">状態</th>
-                                <td class="w-3/4 border border-blue-800 px-4 py-2 text-center">{{ $article->status->name }}</td>
+                                <td class="w-3/4 border border-blue-800 px-4 py-2 text-center">
+                                    {{ $article->status->name }}</td>
                             </tr>
                             <tr>
                                 <th class="x-4 w-1/4 border-b border-blue-200 bg-blue-900 py-2 text-gray-200">更新日</th>
@@ -89,14 +94,17 @@
                                     <div class="flex items-center justify-around">
                                         <div>
                                             <x-button class="btn-green-sm"
-                                                onclick="location.href='{{ route('article.edit', ['article' => $article->id]) }}'"
-                                                >{{ __('Edit') }}</x-button>
+                                                onclick="location.href='{{ route('article.edit', ['article' => $article->id]) }}'">
+                                                {{ __('Edit') }}</x-button>
                                         </div>
                                         <form action={{ route('article.destroy', ['article' => $article->id]) }}
                                             method="post" class="m-0">
                                             @csrf
                                             @method('delete')
-                                            <button type="submit" class="btn-red-sm">削除</button>
+                                            <x-forms.button class="btn-red-sm"
+                                                onclick="if (!window.confirm('本当に削除しますか？')) return false">
+                                                {{ __('Delete') }}
+                                            </x-forms.button>
                                         </form>
                                     </div>
                                 </td>

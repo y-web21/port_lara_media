@@ -11,7 +11,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Routing\Exceptions\UrlGenerationException;
 
-class EditArticleTest extends TestCase
+class ArticleEditTest extends TestCase
 {
     // # NOTE RefreshDatabase では AUTO_INCREMENT の採番はリセットされない
     use RefreshDatabase;
@@ -129,18 +129,19 @@ class EditArticleTest extends TestCase
     /**
      * @test
      * @dataProvider articleValidateFaildDataProvider
-     * @param array<string> $err
+     * @param array<string> $name
      * @param array{
      *   title: string,
      *   content: string,
      *   status_id: string|int
      * } $postData
      */
-    public function 記事編集がvalidationによって失敗する(array $err, array $postData): void
+    public function 記事編集がvalidationによって失敗する(array $name, array $postData): void
     {
         $this->get(route('article.edit', ['article' => $this->article->id]))->assertStatus(200);
         $this->put(route('article.update', ['article' => $this->article->id]), $postData)
-            ->assertSessionHasErrors($err)
+            ->assertInvalid($name)
+            ->assertSessionHasErrors($name)
             ->assertRedirect(route('article.edit', ['article' => $this->article->id]));
 
         $this->assertDatabaseMissing($this->table_name, [
