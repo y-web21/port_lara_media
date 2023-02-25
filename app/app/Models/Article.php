@@ -107,7 +107,7 @@ class Article extends Model
      * @param integer $id  レコードID
      * @return bool isSuccess
      */
-    public function deleteAricle(int $id): bool
+    public function deleteArticle(int $id): bool
     {
         $target = $this->query()->author()->findOrFail($id);
         return $target->delete();

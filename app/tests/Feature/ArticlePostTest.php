@@ -8,7 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
-class PostArticleTest extends TestCase
+class ArticlePostTest extends TestCase
 {
     use RefreshDatabase;
     private $user;
@@ -69,7 +69,7 @@ class PostArticleTest extends TestCase
     /**
      * @test
      * @dataProvider articleValidateFaildDataProvider
-     * @param array<string> $err
+     * @param array<string> $name
      * @param array{
      *   title: string,
      *   content: string,
@@ -77,12 +77,13 @@ class PostArticleTest extends TestCase
      * } $postData
      * @return void
      */
-    public function 記事投稿がvalidationによって失敗する(array $err, array $postData)
+    public function 記事投稿がvalidationによって失敗する(array $name, array $postData)
     {
         $this->get(route('article.create'));
         $this->post(route('article.store'), $postData)
-            ->assertRedirect(route('article.create'))
-            ->assertSessionHasErrors($err);
+            ->assertInvalid($name)
+            ->assertSessionHasErrors($name)
+            ->assertRedirect(route('article.create'));
 
         $this->assertDatabaseMissing($this->table_name, [
             'title' => $postData['title'],

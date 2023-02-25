@@ -113,7 +113,7 @@ class ArticleController extends Controller
      */
     public function destroy($id)
     {
-        if (!$this->article->deleteAricle($id)) {
+        if (!$this->article->deleteArticle($id)) {
             abort(422, 'deletion failed.');
         };
         return redirect()->route('dashboard')
