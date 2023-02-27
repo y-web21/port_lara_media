@@ -75,3 +75,8 @@ body {
 .dropdown:hover>.dropdown-content {
     display: block;
 }
+
+/* for styled input type=file  */
+input[type="file"] {
+    display: none;
+}
