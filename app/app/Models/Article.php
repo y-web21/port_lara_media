@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Image;
 
 class Article extends Model
 {
@@ -25,6 +26,7 @@ class Article extends Model
         'author',
         'updated_by',
         'status_id',
+        'image_id',
     ];
 
     /**
@@ -54,6 +56,16 @@ class Article extends Model
         return $this->belongsTo(ArticleStatus::class, 'status_id');
     }
 
+    // /**
+    //  * 記事の画像を取得する
+    //  *
+    //  * @return \Illuminate\Database\Eloquent\Relations\HasOne
+    //  */
+    // public function image()
+    // {
+    //     return $this->belongsTo(Image::class);
+    // }
+
     /**
      * 公開状態にあるレコードに絞り込むローカルスコープ
      *
@@ -79,7 +91,7 @@ class Article extends Model
     }
 
     /**
-     * 表示用のログインユーザの投稿一覧を取得する
+     * @comment ログインユーザの投稿一覧を取得する
      */
     public function getMyPosts(int $per_page = 10): LengthAwarePaginator
     {
@@ -90,7 +102,22 @@ class Article extends Model
     }
 
     /**
-     * 既存の記事更新処理
+     * 記事投稿処理
+     * @param Illuminate\Http\Request $request
+     */
+    public function postArticle($request,int $imgId)
+    {
+        $newArticle = new Article;
+        $newArticle->title = $request['title'];
+        $newArticle->content = $request['content'];
+        $newArticle->author = Auth::user()->id;
+        $newArticle->status_id = $request['status_id'];
+        $newArticle->image_id = $imgId;
+        return $newArticle->save();
+    }
+
+    /**
+     * 記事更新処理
      * @todo フォームで許可していない更新可能フィールドが form html の改ざんによって送られてきた場合に問題がないか検討する
      * @param Illuminate\Http\Request $request
      * @param integer $id  レコードID

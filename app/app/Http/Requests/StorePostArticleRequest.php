@@ -34,6 +34,7 @@ class StorePostArticleRequest extends FormRequest
             'title' => ['required', 'max:100'],
             'content' => ['required', 'max:5000'],
             'status_id' => ['required', 'int', 'between:0,1'],
+            'image' => ['required', 'image', 'mimes:jpeg,gif,png', 'max:10240'],
         ];
     }
 

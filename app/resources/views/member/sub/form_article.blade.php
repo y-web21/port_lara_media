@@ -85,7 +85,7 @@
                     </div>
 
                 <div class="flex items-center justify-center">
-                    <x-forms.input-file name="image">画像を選択</x-forms.input-file>
+                    <x-forms.input-file form="main_form" name="image">画像を選択</x-forms.input-file>
                 </div>
 
                 <div class="flex items-center justify-center">
@@ -107,7 +107,7 @@
         </div>
     </div>
 
-    <form id="main_form">
+    <form id="main_form" enctype="multipart/form-data">
         @csrf
         @if ($action === 'edit')
             @method('put')

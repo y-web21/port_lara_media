@@ -17,13 +17,12 @@ return new class extends Migration
             $table->id();
             $table->string('title')->default('no title');
             $table->mediumText('content');
-            $table->unsignedBigInteger('author')->unsigned()->default(0);
-            $table->unsignedBigInteger('updated_by')->unsigned()->default(0);
+            $table->unsignedBigInteger('author')->default(0);
+            $table->unsignedBigInteger('updated_by')->default(0);
             $table->tinyInteger('status_id')->unsigned()->default(0);
-            $table->softDeletes();
+            $table->softDeletes()->comment('記事の削除は論理削除とする');
             $table->timestamps();
             $table->foreign('author')->references('id')->on('users');
-            // $table->foreign('updated_by')->references('id')->on('users');
         });
     }
 
