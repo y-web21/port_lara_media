@@ -7,6 +7,7 @@
         'title' => '',
         'content' => '',
         'status_id' => 0,
+        'image_id' => 0,
     ];
     // db の値の反映
     if (isset($article)){
@@ -14,6 +15,7 @@
             'title' => $article['title'],
             'content' => $article['content'],
             'status_id' => $article['status_id'],
+            'image_id' => $article['image_id'],
         ];
     }
     // old の値の反映
@@ -21,6 +23,7 @@
         'title' => old('title', $formValue['title']),
         'content' => old('content', $formValue['content']),
         'status_id' => old('status_id', $formValue['status_id']),
+        'image_id' => old('image_id', $formValue['image_id']),
     ];
 @endphp
 
@@ -98,11 +101,12 @@
             <div class="w-full">
                 <x-forms.input-error for="image" class="mt-2" />
                 <label class="text-xl">画像</label>
-                <p id="disp_filename">選択されていません</p>
-                {{-- @if (isset($image) && $image->count() !== 0) --}}
-                    {{-- <img src="{{ asset('/storage/images/' . $image->name) }}" alt="{{ $image->description }}" --}}
-                        {{-- class="w-full maxw-300px mx-auto"> --}}
-                {{-- @endif --}}
+                @if (isset($article->image->path))
+                    <img src="{{ asset($article->image->path) }}"
+                        class="w-full maxw-300px mx-auto">
+                @else
+                    <p id="disp_filename">選択されていません</p>
+                @endif
             </div>
         </div>
     </div>

@@ -105,7 +105,12 @@ class ArticleController extends Controller
      */
     public function update(StorePostArticleRequest $request, $id)
     {
-        if (!$this->article->updateArticle($request, $id)) {
+        $imgId = $this->image->saveImage($request);
+        if ($imgId <  1) {
+            return redirect()->route('article.create')
+                ->with('flash', __('Image upload failed.'));
+        }
+        if (!$this->article->updateArticle($request, $id, $imgId)) {
             abort(422, 'update failed.');
         };
         return redirect()->route('dashboard')

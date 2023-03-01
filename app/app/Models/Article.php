@@ -56,15 +56,15 @@ class Article extends Model
         return $this->belongsTo(ArticleStatus::class, 'status_id');
     }
 
-    // /**
-    //  * 記事の画像を取得する
-    //  *
-    //  * @return \Illuminate\Database\Eloquent\Relations\HasOne
-    //  */
-    // public function image()
-    // {
-    //     return $this->belongsTo(Image::class);
-    // }
+    /**
+     * 記事の画像を取得する
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function image()
+    {
+        return $this->belongsTo(Image::class);
+    }
 
     /**
      * 公開状態にあるレコードに絞り込むローカルスコープ
@@ -123,10 +123,12 @@ class Article extends Model
      * @param integer $id  レコードID
      * @return bool isSuccess
      */
-    public function updateArticle($request, int $id): bool
+    public function updateArticle($request, int $id, int $imgId): bool
     {
         $target = $this->query()->author()->findOrFail($id);
-        return $target->update($request->toArray());
+        $newData = $request->toArray() + ['image_id' => $imgId];
+        // dd($newData);
+        return $target->update($newData);
     }
 
     /**

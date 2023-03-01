@@ -19,13 +19,13 @@ class Image extends Model
         'path',
     ];
 
-    // /**
-    //  * @return \Illuminate\Database\Eloquent\Relations\HasOne
-    //  */
-    // public function path()
-    // {
-    //     return $this->hasOne(ArticleStatus::class, 'status_id');
-    // }
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function path()
+    {
+        return $this->hasOne(ArticleStatus::class);
+    }
 
     /**
      * 画像をローカルに保存し、DBにパスを格納する
@@ -34,16 +34,14 @@ class Image extends Model
      */
     public function saveImage($request): int
     {
-        // 画像情報がセットされていれば、保存処理を実行
         $img = $request->file('image');
-        if (!isset($img)) return '';
+        if (!isset($img)) return 0;
 
         // save to storage/public/images
         $path = $img->store('images', 'public');
         if (!$path) return 0;
 
         return $this->add($path);
-
     }
 
     /**
