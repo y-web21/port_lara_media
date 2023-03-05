@@ -123,11 +123,10 @@ class Article extends Model
      * @param integer $id  レコードID
      * @return bool isSuccess
      */
-    public function updateArticle($request, int $id, int $imgId): bool
+    public function updateArticle($request, int $id, ?int $imgId): bool
     {
         $target = $this->query()->author()->findOrFail($id);
         $newData = $request->toArray() + ['image_id' => $imgId];
-        // dd($newData);
         return $target->update($newData);
     }
 

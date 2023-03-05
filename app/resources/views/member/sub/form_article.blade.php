@@ -7,7 +7,6 @@
         'title' => '',
         'content' => '',
         'status_id' => 0,
-        'image_id' => 0,
     ];
     // db の値の反映
     if (isset($article)) {
@@ -15,7 +14,6 @@
             'title' => $article['title'],
             'content' => $article['content'],
             'status_id' => $article['status_id'],
-            'image_id' => $article['image_id'],
         ];
     }
     // old の値の反映
@@ -23,7 +21,6 @@
         'title' => old('title', $formValue['title']),
         'content' => old('content', $formValue['content']),
         'status_id' => old('status_id', $formValue['status_id']),
-        'image_id' => old('image_id', $formValue['image_id']),
     ];
 
     $preview_image = isset($article->image->path) ? asset($article->image->path) : '';

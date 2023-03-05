@@ -13,6 +13,9 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Image extends Model
 {
+
+    const IMG_NOTHING = 0;
+
     use HasFactory;
 
     protected $fillable = [
@@ -22,9 +25,9 @@ class Image extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function path()
+    public function article()
     {
-        return $this->hasOne(ArticleStatus::class);
+        return $this->hasOne(Article::class);
     }
 
     /**
@@ -42,6 +45,30 @@ class Image extends Model
         if (!$path) return 0;
 
         return $this->add($path);
+    }
+
+    public function editImage($request, $id): ?int
+    {
+        // すでに存在する場合はIDを返す
+        $imgId = $this->getImgId($id);
+        if ($imgId > self::IMG_NOTHING) {
+            return $imgId;
+        }
+
+        // 画像要求なし
+        if ($request->image === null) {
+            return null;
+        }
+
+        return $this->saveImage($request);
+    }
+
+    private function getImgId($articleId): ?int
+    {
+        $article = Article::query()->findOrFail($articleId);
+        $img = $article->image;
+        if ($img === null) return null;
+        return $img->id;
     }
 
     /**
