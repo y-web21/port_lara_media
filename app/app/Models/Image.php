@@ -35,10 +35,13 @@ class Image extends Model
      * @param Illuminate\Http\Request $request
      * @return int 画像テーブルのID、失敗は0を返す
      */
-    public function saveImage($request): int
+    public function saveImage($request): ?int
     {
+
+        // 画像保存要求なし
         $img = $request->file('image');
-        if (!isset($img)) return 0;
+        // if ($request->image === null) {
+        if (!isset($img)) return null;
 
         // save to storage/public/images
         $path = $img->store('images', 'public');
@@ -53,11 +56,6 @@ class Image extends Model
         $imgId = $this->getImgId($id);
         if ($imgId > self::IMG_NOTHING) {
             return $imgId;
-        }
-
-        // 画像要求なし
-        if ($request->image === null) {
-            return null;
         }
 
         return $this->saveImage($request);

@@ -105,7 +105,7 @@ class Article extends Model
      * 記事投稿処理
      * @param Illuminate\Http\Request $request
      */
-    public function postArticle($request,int $imgId)
+    public function postArticle($request,?int $imgId)
     {
         $newArticle = new Article;
         $newArticle->title = $request['title'];

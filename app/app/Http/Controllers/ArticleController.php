@@ -58,7 +58,7 @@ class ArticleController extends Controller
     public function store(StorePostArticleRequest $request)
     {
         $imgId = $this->image->saveImage($request);
-        if ($imgId <  1) {
+        if ($imgId !== null && $imgId <  1) {
             return redirect()->route('article.create')
                 ->with('flash', __('Image upload failed.'));
         }
