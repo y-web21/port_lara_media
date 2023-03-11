@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Library\Api;
+use App\Library\Covid19JpApi;
 use ReflectionClass;
 use PHPUnit\Framework\TestCase;
 
@@ -15,10 +16,11 @@ class ApiTest extends TestCase
      */
     public function test_example()
     {
-        $api = new Api('url__');
-        $url = $this->getProperty($api, 'url');
+        $c19 = new Covid19JpApi('storage/api','s');
+        // $api = new Api('url__');
+        // $url = $this->getProperty($api, 'url');
 
-        $this->assertSame(['url__'], $url);
+        // $this->assertSame(['url__'], $url);
     }
 
     /**

@@ -20,20 +20,28 @@ trait CurlApiTrait
 
         $ch = curl_init($url);
         curl_setopt_array($ch, $curlOptions);
-        $ret_string = curl_exec($ch);
         $info = curl_getinfo($ch);
-        $errno = curl_errno($ch);
-        $trueUrl = $this->resolveRedirectUrl($url);
+        $redirectUrl = $this->resolveRedirectUrl($info);
 
+        // #HACK もう一度APIに問い合わせを行う。冗長かつ1回のリダイレクトのみ対応
+        if (strlen($redirectUrl) > 0){
+            $ch = curl_init($redirectUrl);
+            curl_setopt_array($ch, $curlOptions);
+        }
+
+        $info = curl_getinfo($ch);
+        $retString = curl_exec($ch);
+        $errno = curl_errno($ch);
         $this->curlErrno = $errno;
 
-        return array($trueUrl, $ret_string, $info, $errno !== CURLE_OK);
+        return array($retString, $info, $errno === CURLE_OK, $redirectUrl);
     }
 
-    private function resolveRedirectUrl(string $curlInfo)
+    private function resolveRedirectUrl(mixed $curlInfo): string
     {
         if (gettype($curlInfo['redirect_url']) === 'string' && strlen($curlInfo['redirect_url']) > 0) {
             return $curlInfo['redirect_url'];
         }
+        return '';
     }
 }

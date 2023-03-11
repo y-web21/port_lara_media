@@ -2,19 +2,27 @@
 
 namespace App\Library;
 
-use App\Library\CurlApi;
+use DateTimeInterface;
 
-//  implements fetchWebApi
-// extends Curdl
 abstract class Api
 {
     use CurlApiTrait;
     use LocalStorageTrait;
 
-    private string $lastUrl;
+    /**
+     * APIへのアクセス間隔を設定
+     *
+     * @var integer
+     */
     protected int $updateCycle = 60 * 60 * 2;
-    private string $json;
+    private string $json = '';
     private string $localStoragePath = '';
+    /**
+     * APIのリダイレクトがあった場合ログに出力するため
+     *
+     * @var string
+     */
+    protected string $redirectUrl = '';
 
     // /**
     //  * @param string|array<stirng> $url
@@ -24,49 +32,54 @@ abstract class Api
     // protected string $localStoragePath = '',
     // protected string $logPath = '',
     public function __construct(
-        protected string $storageDir,
+        protected string $localStorageDir,
         protected string $logPath = '',
     ) {
-        // $this->url = $this->strToArray($url);
-        var_dump('a');
+        $this->localStorageDir = realpath($localStorageDir);
+        $this->logPath = realpath($logPath);
+    }
+
+    public function setStorageDir(string $path){
+        $this->localStorageDir = realpath($path);
     }
 
     public function get(string $url, string $filename)
     {
-        $this->lastUrl = $url;
-        $this->localStoragePath = "{$this->storageDir}/{$filename}";
+        $this->redirectUrl = '';
+        $localStoragePath = "{$this->localStorageDir}/{$filename}";
         // ローカルにjsonを保存
-        if (!$this->shouldUpdateLocalFile($this->localStoragePath)) {
-            $this->json = $this->getLocalData();
+        if (!$this->shouldUpdateLocalFile($localStoragePath)) {
+            $this->json = $this->getLocalData($localStoragePath);
             return $this->json;
         }
 
-        if ($this->fetchApi()) {
-            $this->saveLocalData();
+        $json = $this->fetchApi($url);
+        if ($json) {
+            $this->saveLocalData($localStoragePath, $json);
             return $this->json;
         }
 
         // APIからデータ取得失敗した場合
-        $this->json = $this->getLocalData();
+        $this->json = $this->getLocalData($localStoragePath);
         return $this->json;
     }
 
-    private function getLocalData(): string
+    private function getLocalData(string $localStoragePath): string
     {
-        if (file_exists($this->localStoragePath)) {
-            return $this->readText($this->localStoragePath);
+        if (file_exists($localStoragePath)) {
+            return $this->readText($localStoragePath);
         }
         return '';
     }
 
-    private function saveLocalData()
+    private function saveLocalData(string $localStoragePath, string $text)
     {
-        if ($this->localStoragePath !== '') {
-            $this->appendText($this->localStoragePath, $this->json);
+        if ($localStoragePath !== '') {
+            $this->appendText($localStoragePath, $text);
         }
     }
 
-    private function log(string $code, $url = '')
+    private function log(string $code, $url = '', $redirectUrl = ''): void
     {
         if ($this->logPath === '') {
             return;
@@ -76,7 +89,7 @@ abstract class Api
             case '301':
             case '302':
             case '308':
-                $logMessage = "[Caution] {$url} is {$code} responded. Redirected to {$this->lastUrl} \n";
+                $logMessage = "[Caution] {$url} is {$code} responded. Redirected to {$redirectUrl}\n";
                 break;
             case '400':
             case '404':
@@ -86,28 +99,32 @@ abstract class Api
             default:
         }
         if (isset($logMessage)) {
+            $logMessage = "[" . date(DateTimeInterface::W3C) . "] " . $logMessage;
             $this->appendText($this->logPath, $logMessage);
         }
     }
 
-    public function fetchApi(): bool
+    /**
+     * api への問い合わせを行う
+     *
+     * @return array<string> [isSuccess, text, url]
+     */
+    public function fetchApi(string $url): string
     {
-        list($ret, $curlInfo, $isSuccess, $this->lastUrl) = $this->execCurl($this->lastUrl);
-        $this->lastUrl = $this->resolveRedirectUrl($curlInfo);
+        list($ret, $curlInfo, $isSuccess, $redirectUrl) = $this->execCurl($url);
 
         if (!$isSuccess) {
-            return false;
+            return '';
         }
 
-        $this->log($curlInfo['http_code']);
+        $this->log($curlInfo['http_code'], $url, $redirectUrl);
 
         if ($this->isJson($ret)) {
-            $this->json = $ret;
-            return true;
+            return $ret;
         }
 
         // failure
-        return false;
+        return '';
     }
 
     /**
@@ -115,12 +132,12 @@ abstract class Api
      *
      * @return boolean
      */
-    private function shouldUpdateLocalFile(): bool
+    private function shouldUpdateLocalFile(string $path): bool
     {
-        if (!$this->isExistsLocal($this->localStoragePath)){
+        if (!$this->isExistsLocal($path)) {
             return true;
         }
-        if ($this->getLastModified($this->localStoragePath) > $this->updateCycle) {
+        if ($this->getLastModified($path) > $this->updateCycle) {
             return true;
         }
 
@@ -131,9 +148,9 @@ abstract class Api
         return false;
     }
 
-    private function elapsedLastFetch():int
+    private function elapsedTimeLastFetch(string $localStoragePath): int
     {
-        return $this->getLastModified($this->localStoragePath) > $this->updateCycle;
+        return $this->getLastModified($localStoragePath) > $this->updateCycle;
     }
 
     private function isExistsLocal(string $path): bool

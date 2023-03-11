@@ -7,21 +7,21 @@ namespace App\Library;
  */
 trait LocalStorageTrait
 {
-    private function appendText(string $path, string $text, int $perm = 0775)
+    private function appendText(string $path, string $text, int $perm = 0755)
     {
         $this->writeText($path, $text, $perm, LOCK_EX | FILE_APPEND);
     }
 
-    private function overwriteText(string $path, string $text, int $perm = 0775)
+    private function overwriteText(string $path, string $text, int $perm = 0755)
     {
         $this->writeText($path, $text, $perm, LOCK_EX);
     }
 
-    private function writeText(string $path, string $text, int $perm = 0775, int $opts = 0)
+    private function writeText(string $path, string $text, int $perm = 0755, int $opts = 0)
     {
         $dir = dirname($path);
         if (!file_exists($dir)) {
-            mkdir($perm, true);
+            mkdir($dir, 0755, true);
         }
         // open with exclusive lock
         file_put_contents($path, $text, $opts);
