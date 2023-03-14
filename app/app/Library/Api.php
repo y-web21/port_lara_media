@@ -39,7 +39,8 @@ abstract class Api
         $this->logPath = realpath($logPath);
     }
 
-    public function setStorageDir(string $path){
+    public function setStorageDir(string $path)
+    {
         $this->localStorageDir = realpath($path);
     }
 
@@ -89,7 +90,7 @@ abstract class Api
             case '301':
             case '302':
             case '308':
-                $logMessage = "[Caution] {$url} is {$code} responded. Redirected to {$redirectUrl}\n";
+                $logMessage = "[Warning] {$url} is missing. {$code} responded.\n";
                 break;
             case '400':
             case '404':
@@ -97,6 +98,9 @@ abstract class Api
                 $logMessage = "[Warning] {$url} is {$code} responded. Page not fuond.\n";
                 break;
             default:
+                if ($redirectUrl !== '') {
+                    $logMessage = "[Caution] {$url} is {$code} responded. Redirected to {$redirectUrl}\n";
+                }
         }
         if (isset($logMessage)) {
             $logMessage = "[" . date(DateTimeInterface::W3C) . "] " . $logMessage;
@@ -111,13 +115,13 @@ abstract class Api
      */
     public function fetchApi(string $url): string
     {
-        list($ret, $curlInfo, $isSuccess, $redirectUrl) = $this->execCurl($url);
+        list($ret, $curlInfo, $isSuccess, $redirecteUrl) = $this->execCurl($url);
+
+        $this->log($curlInfo['http_code'], $url, $redirecteUrl);
 
         if (!$isSuccess) {
             return '';
         }
-
-        $this->log($curlInfo['http_code'], $url, $redirectUrl);
 
         if ($this->isJson($ret)) {
             return $ret;
@@ -141,10 +145,6 @@ abstract class Api
             return true;
         }
 
-        // $lastUpdate = filemtime($path);
-        // if ($_SERVER['REQUEST_TIME'] - $lastUpdate < $this->updateCycle) {
-        // return true;
-        // }
         return false;
     }
 
