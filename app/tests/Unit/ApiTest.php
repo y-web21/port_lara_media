@@ -16,11 +16,13 @@ class ApiTest extends TestCase
      */
     public function test_example()
     {
-        $c19 = new Covid19JpApi('storage/api','s');
-        // $api = new Api('url__');
-        // $url = $this->getProperty($api, 'url');
-
-        // $this->assertSame(['url__'], $url);
+        $c19api = new Covid19JpApi(
+            './storage/api',
+            logPath: './storage/api/log.log',
+        );
+        var_dump($c19api->prefectures()->get());
+        var_dump($c19api->prefectures()->setPrefecture('1')->get());
+        // var_dump($c19api->total()->get());
     }
 
     /**

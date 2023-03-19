@@ -15,8 +15,7 @@ abstract class Api
      * @var integer
      */
     protected int $updateCycle = 60 * 60 * 2;
-    private string $json = '';
-    private string $localStoragePath = '';
+    private array $json = [];
     /**
      * APIのリダイレクトがあった場合ログに出力するため
      *
@@ -24,13 +23,6 @@ abstract class Api
      */
     protected string $redirectUrl = '';
 
-    // /**
-    //  * @param string|array<stirng> $url
-    //  */
-    // public function __construct(
-    // protected string|array $url,
-    // protected string $localStoragePath = '',
-    // protected string $logPath = '',
     public function __construct(
         protected string $localStorageDir,
         protected string $logPath = '',
@@ -44,28 +36,44 @@ abstract class Api
         $this->localStorageDir = realpath($path);
     }
 
-    public function get(string $url, string $filename)
+    /**
+     * $url から取得したデータか、$filename に保存されたデータを返します。
+     * どちらを返すかは、$this->updateCycle によって決まります。
+     *
+     * @param string $url
+     * @param string $filename
+     * @return string
+     */
+    public function getByUrl(string $url, string $filename): array
     {
         $this->redirectUrl = '';
         $localStoragePath = "{$this->localStorageDir}/{$filename}";
-        // ローカルにjsonを保存
         if (!$this->shouldUpdateLocalFile($localStoragePath)) {
-            $this->json = $this->getLocalData($localStoragePath);
+            $this->json = $this->jsonStringToArray($this->loadFromLocalText($localStoragePath));
             return $this->json;
         }
 
+        /** @var string $json */
         $json = $this->fetchApi($url);
         if ($json) {
-            $this->saveLocalData($localStoragePath, $json);
+            // ローカルにjsonを保存
+            $this->saveToLocalText($localStoragePath, $json);
+            $this->json = $this->jsonStringToArray($json);
             return $this->json;
         }
 
-        // APIからデータ取得失敗した場合
-        $this->json = $this->getLocalData($localStoragePath);
+        // APIからデータ取得失敗した場合ローカルファイルを読み込む
+        $this->json = $this->jsonStringToArray($this->loadFromLocalText($localStoragePath));
         return $this->json;
     }
 
-    private function getLocalData(string $localStoragePath): string
+    /**
+     * ローカルに保存されたテキストを返します
+     *
+     * @param string $localStoragePath
+     * @return string
+     */
+    private function loadFromLocalText(string $localStoragePath): string
     {
         if (file_exists($localStoragePath)) {
             return $this->readText($localStoragePath);
@@ -73,7 +81,14 @@ abstract class Api
         return '';
     }
 
-    private function saveLocalData(string $localStoragePath, string $text)
+    private function saveToLocalText(string $localStoragePath, string $text)
+    {
+        if ($localStoragePath !== '') {
+            $this->overwriteText($localStoragePath, $text);
+        }
+    }
+
+    private function appendToLocalText(string $localStoragePath, string $text)
     {
         if ($localStoragePath !== '') {
             $this->appendText($localStoragePath, $text);
@@ -104,7 +119,7 @@ abstract class Api
         }
         if (isset($logMessage)) {
             $logMessage = "[" . date(DateTimeInterface::W3C) . "] " . $logMessage;
-            $this->appendText($this->logPath, $logMessage);
+            $this->appendToLocalText($this->logPath, $logMessage);
         }
     }
 
@@ -115,6 +130,7 @@ abstract class Api
      */
     public function fetchApi(string $url): string
     {
+        var_dump(strtotime($this->getLastModified($path)));
         list($ret, $curlInfo, $isSuccess, $redirecteUrl) = $this->execCurl($url);
 
         $this->log($curlInfo['http_code'], $url, $redirecteUrl);
@@ -141,7 +157,13 @@ abstract class Api
         if (!$this->isExistsLocal($path)) {
             return true;
         }
-        if ($this->getLastModified($path) > $this->updateCycle) {
+
+        if (!$this->isJson($this->loadFromLocalText($path))) {
+            return true;
+        }
+
+        $elapsedSinceLastUpdate = strtotime("now") - strtotime($this->getLastModified($path));
+        if ($elapsedSinceLastUpdate > $this->updateCycle) {
             return true;
         }
 
@@ -156,6 +178,14 @@ abstract class Api
     private function isExistsLocal(string $path): bool
     {
         return file_exists($path);
+    }
+
+    private static function jsonStringToArray(string $jsonString): array
+    {
+        /** @var string|bool|null $decoded */
+        $decoded;
+        $decoded = json_decode($jsonString, true);
+        return is_array($decoded) ? $decoded : [];
     }
 
     public static function isJson($str): bool
