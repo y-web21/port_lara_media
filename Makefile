@@ -37,6 +37,8 @@ test:
 	docker exec $(APP_CONTAINER) bash -c 'php artisan test'
 npm-watch:
 	docker exec $(APP_CONTAINER) bash -c 'npm run watch'
+log:
+	docker exec $(APP_CONTAINER) bash -c '</var/www/app/storage/logs/laravel.log tail -10000'
 # ---------------
 # wev server
 # ---------------

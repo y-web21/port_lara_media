@@ -130,7 +130,6 @@ abstract class Api
      */
     public function fetchApi(string $url): string
     {
-        var_dump(strtotime($this->getLastModified($path)));
         list($ret, $curlInfo, $isSuccess, $redirecteUrl) = $this->execCurl($url);
 
         $this->log($curlInfo['http_code'], $url, $redirecteUrl);

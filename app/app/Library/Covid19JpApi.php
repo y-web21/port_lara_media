@@ -2,21 +2,11 @@
 
 namespace App\Library;
 
-use phpDocumentor\Reflection\Types\This;
-
-// require_once('/var/www/app/app/Library/Api.php');
-// use App\Library\Api;
-// use App\Library\Nps as Hiroshi;
-
-// class Covid19JpApi extends Hiroshi
 class Covid19JpApi extends Api
 {
     private $url = [
-        // 'prefectures' => "https://covid19-japan-web-api.now.sh/api//v1/prefectures/dummy", // response 308
         'prefectures' => "https://covid19-japan-web-api.now.sh/api/v1/prefectures",
         'total' => "https://covid19-japan-web-api.now.sh/api/v1/total",
-        // 'positives' => "https://covid19-japan-web-api.now.sh/api//v1/positives", // 308
-        // 'positives' => "https://covid19-japan-web-api.now.sh/api/v1/positives", // 400
         'positives' => "https://covid19-japan-web-api.now.sh/api/v1/positives?prefecture=",
     ];
 
@@ -39,7 +29,6 @@ class Covid19JpApi extends Api
     const DEFAULT_PREF = '13';
 
     // method chain current data
-    private string $data = '';
     private string $currentMode = 'prefectures';
 
     public function __construct(
@@ -123,7 +112,6 @@ class Covid19JpApi extends Api
      */
     private function getPrefectureData(string|int $prefCode, array $allPrefData): array
     {
-        // $prefCode = 99;
         $prefHash = array_filter($allPrefData, function ($prefData) use ($prefCode) {
             return $prefData['id'] === (int)$prefCode;
         });
