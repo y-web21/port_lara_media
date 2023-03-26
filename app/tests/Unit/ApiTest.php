@@ -2,7 +2,6 @@
 
 namespace Tests\Unit;
 
-use App\Library\Api;
 use App\Library\Covid19JpApi;
 use ReflectionClass;
 use PHPUnit\Framework\TestCase;
@@ -22,7 +21,7 @@ class ApiTest extends TestCase
         );
         var_dump($c19api->prefectures()->get());
         var_dump($c19api->prefectures()->setPrefecture('1')->get());
-        // var_dump($c19api->total()->get());
+        var_dump($c19api->total()->get());
     }
 
     /**
