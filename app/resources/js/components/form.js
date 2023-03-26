@@ -4,19 +4,20 @@
    */
   const formChangesWathcer = () => {
     /** @type {Element} */
-    const formInputs = document.querySelectorAll('form input[name], form textarea[name]')
+    const formInputs = document.querySelectorAll('input[name], textarea[name]')
     /** @type {boolean} */
     let hasChange = false;
+    /** @type {Element} */
+    const exceptElms = document.querySelectorAll('#btn-post, #btn-edit')
 
     // なにかしらの変更があったことを記憶する
     for (const el of formInputs) {
       el.addEventListener('change', () => hasChange = true)
     }
 
-    // 特定のボタンは離脱警告対象から除外する
-    const exceptIds = ['btn_edit', 'btn_edit']
-    for (const el of exceptIds) {
-      document.getElementById(el).addEventListener('click', () => hasChange = false)
+    // 特定の要素は離脱警告対象から除外する
+    for (const el of exceptElms) {
+      el.addEventListener('click', () => hasChange = false)
     }
 
     // 離脱時に確認する
@@ -25,5 +26,30 @@
     }, false)
   }
 
+  /**
+  * @param {string} id input type=file で選択したファイル名の表示先
+  */
+  const refreshFilename = id => {
+    const file = document.querySelector('input[type=file]')
+    const disp = document.getElementById(id)
+    file.addEventListener('change', () => disp.textContent = 'プレビュー')
+  }
+
+  function imagePreview() {
+    const input = document.querySelector('#input')
+    const figure = document.querySelector('#figure')
+    const figureImage = document.querySelector('#figureImage')
+
+    input.addEventListener('change', (ev) => {
+      const [file] = ev.target.files
+
+      if (file) {
+        figureImage.setAttribute('src', URL.createObjectURL(file))
+      }
+    })
+  }
+
+  imagePreview()
   formChangesWathcer()
+  refreshFilename('disp-filename')
 })();

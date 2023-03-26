@@ -9,7 +9,7 @@
         'status_id' => 0,
     ];
     // db の値の反映
-    if (isset($article)){
+    if (isset($article)) {
         $formValue = [
             'title' => $article['title'],
             'content' => $article['content'],
@@ -22,34 +22,33 @@
         'content' => old('content', $formValue['content']),
         'status_id' => old('status_id', $formValue['status_id']),
     ];
+
+    $preview_image = isset($article->image->path) ? asset($article->image->path) : '';
+
 @endphp
 
-@push( 'script' )
-
+@push('script')
     <script src="{{ asset('/js/form.js') }}" defer></script>
 @endpush
 
-<div class="px-4 pb-8">
+<div class="px-4 py-8">
 
-    <form class="flex flex-col space-y-8">
-        @csrf
+    <div class="flex flex-col space-y-8">
 
         {{-- form inputs --}}
-        <div class="flex flex-col space-y-4 items-end md:space-y-0 md:flex-row md:space-x-4">
+        <div class="flex flex-col items-end space-y-4 md:flex-row md:space-y-0 md:space-x-4">
 
             <div class="w-full">
                 <x-forms.input-error for="title" class="mt-2" />
 
                 <label class="text-xl">タイトル</label>
-                <x-forms.input-box class id="new_title" placeholder="タイトルを入力してください"
-                    name="title"
-                    value="{{ old('title', $formValue['title'] ?: ''); }}"/>
+                <x-forms.input-box class id="new_title" placeholder="タイトルを入力してください" name="title" form="main_form"
+                    value="{{ old('title', $formValue['title'] ?: '') }}" />
             </div>
 
             <div class="w-full">
                 <label class="text-xl">投稿者</label>
-                <x-forms.input-box disabled class="bg-gray-200"
-                    name="author"
+                <x-forms.input-box disabled class="bg-gray-200" name="author" form="main_form"
                     value="{{ Auth::user()->name }}" />
             </div>
         </div>
@@ -57,31 +56,31 @@
         <div class="w-full">
             <x-forms.input-error for="content" class="mt-2" />
             <label class="text-xl">投稿内容</label>
-            <textarea id="new_content" name="content" class="w-full form-active-blue text-opacity-10 minh-300px"
-            placeholder="内容を入力してください">{{ $formValue['content'] }}</textarea>
+            <textarea form="main_form" id="new_content" name="content" class="form-active-blue minh-300px w-full text-opacity-10"
+                placeholder="内容を入力してください">{{ $formValue['content'] }}</textarea>
         </div>
 
-        <div class="py-1 w-full flex flex-wrap flex-col space-y-4 md:space-y-0 justify-start md:flex-row md:items-end">
+        <div class="flex w-full flex-col flex-wrap justify-start space-y-4 py-1 md:flex-row md:items-end md:space-y-0">
             <label class="text-xl">公開ステータス</label>
-            <x-forms.radio name="status_id" :items="$articleStatuses" key="id" value="name" :checked="(int)($formValue['status_id'])"/>
+            <x-forms.radio form="main_form" name="status_id" :items="$articleStatuses" key="id" value="name"
+                :checked="(int) $formValue['status_id']" />
             <x-forms.input-error for="status_id" class="ml-4" />
         </div>
 
         <hr>
 
         {{-- form buttons --}}
-        <div class="flex flex-col md:space-y-0 md:flex-row md:space-x-4 gap-4">
-            <div class="flex w-full justify-around">
+        <div class="flex flex-col items-start gap-4 md:flex-row md:space-y-0 md:space-x-4">
+            <div class="flex w-full items-start justify-around">
 
                 <div class="flex items-center justify-center">
                     @if ($action === 'edit')
-                        @method('put')
-                        <x-forms.button id="btn_edit" class="btn-green"
+                        <x-forms.button form="main_form" id="btn-edit" class="btn-green"
                             formaction="{{ route('article.update', ['article' => $id]) }}">
                             {{ __('Edit') }}
                         </x-forms.button>
                     @else
-                        <x-forms.button id="btn_post" class="btn-blue"
+                        <x-forms.button form="main_form" id="btn-post" class="btn-blue"
                             formaction="{{ route('article.store') }}">
                             {{ __('Create') }}
                         </x-forms.button>
@@ -89,9 +88,9 @@
                 </div>
 
                 <div class="flex items-center justify-center">
-                    <button id="btn_submit_select_image" type="submit" formmethod="post" formaction=""
-                        class="btn-gray">画像を選択(未)</button>
+                    <x-forms.input-file id="input" form="main_form" name="image">画像を選択</x-forms.input-file>
                 </div>
+
                 <div class="flex items-center justify-center">
                     <x-forms.button class="btn-gray" type="button" onclick="javascript:history.back();">
                         {{ __('Go back') }}
@@ -100,12 +99,24 @@
             </div>
 
             <div class="w-full">
-                @if (isset($image) && $image->count() !== 0)
-                    <label class="text-xl">投稿画像(未実装)</label>
-                    <img src="{{ asset('/storage/images/' . $image->name) }}" alt="{{ $image->description }}"
-                        class="w-full maxw-300px mx-auto">
-                @endif
+                <x-forms.input-error for="image" class="mt-2" />
+                <label class="text-xl">画像</label>
+                <figure id="figure">
+                    @if ($preview_image)
+                        <figcaption id="disp-filename">プレビュー</figcaption>
+                    @else
+                        <figcaption id="disp-filename">選択されていません</figcaption>
+                    @endif
+                    <img src="{{ $preview_image }}" id="figureImage">
+                </figure>
             </div>
         </div>
+    </div>
+
+    <form id="main_form" enctype="multipart/form-data">
+        @csrf
+        @if ($action === 'edit')
+            @method('put')
+        @endif
     </form>
 </div>
