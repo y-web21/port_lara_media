@@ -40,6 +40,7 @@
 
             <div class="w-full">
                 <x-forms.input-error for="title" class="mt-2" />
+
                 <label class="text-xl">タイトル</label>
                 <x-forms.input-box class id="new_title" placeholder="タイトルを入力してください" name="title" form="main_form"
                     value="{{ old('title', $formValue['title'] ?: '') }}" />
